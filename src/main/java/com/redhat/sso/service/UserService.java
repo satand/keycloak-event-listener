@@ -54,16 +54,20 @@ public class UserService {
 
         UserModel newRegisteredUser = Optional.ofNullable(session.userLocalStorage().getUserById(realm, userId))
                 .orElseThrow(() -> new IllegalArgumentException(String.format("User with id %s not found", userId)));
-        LOGGER.infof("Found user %s on local storage", newRegisteredUser.getUsername());
+        LOGGER.infof("Found user %s on local storage", userId);
 
         Map<String, String> secondaryAttributes = this.queryLDAP(newRegisteredUser.getUsername());
         secondaryAttributes.forEach(newRegisteredUser::setSingleAttribute);
         this.dumpUser(newRegisteredUser);
+
+        
         // update cache
         if (session.userCache() != null) {
-            LOGGER.infof("Updating cache for userId: %s", userId);
-            UserModel cachedUser = session.userCache().getUserById(realm, userId);
-            secondaryAttributes.forEach(cachedUser::setSingleAttribute);
+            Optional<UserModel> cachedUser = Optional.ofNullable(session.userCache().getUserById(realm, userId));
+            cachedUser.ifPresent(cu -> {
+                LOGGER.infof("Updating cache for userId: %s", userId);
+                secondaryAttributes.forEach(cu::setSingleAttribute);
+            });
         }
 
     }

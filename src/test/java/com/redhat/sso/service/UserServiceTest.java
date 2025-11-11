@@ -28,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -124,7 +125,42 @@ class UserServiceTest {
 
         verify(userModel, times(2)).setSingleAttribute(eq("titolo"), any());
         verify(userModel, times(2)).setSingleAttribute(eq("numero"), any());
+        verify(userCache, times(1)).getUserById(eq(realmModel), eq("mario.rossi"));
+    }
 
+    @Test
+    void testUpdatedUserWhenNotFoundInCache() throws NamingException {
+
+        RealmModel realmModel = mock(RealmModel.class);
+        KeycloakSession keycloakSession = mock(KeycloakSession.class);
+
+        UserCache userCache = mock(UserCache.class);
+        UserProvider userProvider = mock(UserProvider.class);
+        // Session
+        when(keycloakSession.userLocalStorage()).thenReturn(userProvider);
+        when(keycloakSession.userCache()).thenReturn(userCache);
+
+        UserModel userModel = new InMemoryUserAdapter(keycloakSession, realmModel, "mario.rossi");
+
+        userModel.setFirstName("Mario");
+        userModel.setLastName("Rossi");
+        userModel.setUsername("mario.rossi");
+        userModel.setEmail("mario.rossi@example.com");
+        userModel = spy(userModel);
+
+        // User found on provider
+        when(userProvider.getUserById(eq(realmModel), eq("mario.rossi"))).thenReturn(userModel);
+        // User not found on cache
+        when(userCache.getUserById(eq(realmModel), eq("mario.rossi"))).thenReturn(null);
+
+        // Given
+        initLdapMocks();
+
+        userService.updateUser(realmModel, keycloakSession, "mario.rossi");
+
+        verify(userModel, times(1)).setSingleAttribute(eq("titolo"), any());
+        verify(userModel, times(1)).setSingleAttribute(eq("numero"), any());
+        verify(userCache, times(1)).getUserById(eq(realmModel), eq("mario.rossi"));
     }
 
     @Test
@@ -157,7 +193,6 @@ class UserServiceTest {
 
         verify(userModel, times(1)).setSingleAttribute(eq("titolo"), any());
         verify(userModel, times(1)).setSingleAttribute(eq("numero"), any());
-
     }
 
     @Test
