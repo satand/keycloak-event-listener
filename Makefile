@@ -1,8 +1,11 @@
-export SSO_PATH=/home/lsnidero/Projects/rh-sso-7.6
+# If It's necessary define your JAVA_HOME
+#export JAVA_HOME=<YOUR_JAVA_HOME>
 
+export SSO_PATH=$(CURDIR)/RHSSO/rh-sso-7.6
 
 compile:
 	./mvnw clean package
+
 prepare-sso: compile
 	cp target/sso-event-listener-provider.jar ${SSO_PATH}/standalone/deployments
 
@@ -14,5 +17,5 @@ run-sso: prepare-sso compile
     export EXTERNAL_LDAP_SEARCH_FILTER= && \
     export EXTERNAL_LDAP_ATTRIBUTE_MAP=title=titolo,non_existent_attribute=non_existent_attribute,employeenumber=numero,uidnumber=userID,roomNumber=stanza,sn=sn && \
     export EXTERNAL_LDAP_USERNAME_FILTER=cn && \
-    export JAVA_HOME=/usr/lib/sdk/openjdk11/jvm/openjdk-11 && \
-	${SSO_PATH}/bin/standalone.sh -b 0.0.0.0 -Djboss.socket.binding.port-offset=1000
+	${SSO_PATH}/bin/standalone.sh -b 0.0.0.0
+    # -Djboss.socket.binding.port-offset=1000
