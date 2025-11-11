@@ -35,19 +35,22 @@ public class UserService {
 
     public Map<String, String> queryLDAP(String username) throws NamingException {
 
-        LOGGER.log(Logger.Level.INFO, "Searching on external LDAP server");
+        LOGGER.infof("Searching a user with username %s on external LDAP server", username);
 
         DirContext context = ldapService.initContext(config.getProviderUrl(), config.getSecurityPrincipal(), config.getSecurityCredentials());
+        LOGGER.debug("External LDAP context initialized ");
 
-        LOGGER.log(Logger.Level.INFO, "External LDAP context initialized ");
+        try {
 
-        Map<String, String> collect = ldapService.searchUserOnExternalLDAP(context, config.getUsersDN(), config.getExternalUsernameFilter(), username, config.getExternalAttributes());
-
-        LOGGER.log(Logger.Level.INFO, String.format("Collected %d attributes for user %s: %s", collect.size(), username, collect));
-        context.close();
-
-        return Collections.unmodifiableMap(collect);
-
+            Map<String, String> collect = ldapService.searchUserOnExternalLDAP(context, 
+                config.getUsersDN(), config.getExternalUsernameFilter(), username, config.getExternalAttributes());
+            LOGGER.infof("Collected %d attributes for user %s: %s", collect.size(), username, collect);
+    
+            return Collections.unmodifiableMap(collect);
+        }
+        finally {
+            context.close();
+        }
     }
 
     public void updateUser(RealmModel realm, KeycloakSession session, String userId) throws NamingException {
