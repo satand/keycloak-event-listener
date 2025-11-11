@@ -12,9 +12,6 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.RealmProvider;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.naming.NamingException;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -27,8 +24,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SsoCustomEventListenerProviderTest {
-
-    private static final Logger log = LoggerFactory.getLogger(SsoCustomEventListenerProviderTest.class);
 
     @Mock
     KeycloakSession keycloakSession;

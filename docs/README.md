@@ -17,13 +17,13 @@ $ podman network create --ignore  myldapnet
 Run openldap (slapd) for **primary** (or **EXTERNAL**) directory:
 
 ```shell
-$ podman run -it --replace  -p 3389:389 -p 3636:636 --net myldapnet --network-alias openldap-server --name openldap-server --env LDAP_ORGANISATION="My Company" --env LDAP_DOMAIN="ldap.example.com" --env LDAP_ADMIN_PASSWORD="password"  osixia/openldap:latest
+$ podman run -it --replace  -p 3389:389 -p 3636:636 --net myldapnet --network-alias openldap-server --name openldap-server --env LDAP_ORGANISATION="My Company" --env LDAP_DOMAIN="ldap.example.com" --env LDAP_ADMIN_PASSWORD="password"  docker.io/osixia/openldap:latest
 ```
 
 Run openldap (slapd) for **secondary** (or **INTERNAL**) directory:
 
 ```shell
-$ podman run -it --replace  -p 4389:389 -p 4636:636 --net myldapnet --network-alias openldap-server-secondary --name openldap-server-secondary --env LDAP_ORGANISATION="My Company" --env LDAP_DOMAIN="ldap.secondary.example.com" --env LDAP_ADMIN_PASSWORD="password"  osixia/openldap:latest
+$ podman run -it --replace  -p 4389:389 -p 4636:636 --net myldapnet --network-alias openldap-server-secondary --name openldap-server-secondary --env LDAP_ORGANISATION="My Company" --env LDAP_DOMAIN="ldap.secondary.example.com" --env LDAP_ADMIN_PASSWORD="password"  docker.io/osixia/openldap:latest
 ```
 
 ## Testing login with admin with ldapsearch
@@ -36,7 +36,7 @@ $ ldapsearch -x -H ldap://localhost:3389 -D "cn=admin,dc=ldap,dc=example,dc=com"
 or, if you prefer, use the container instead:
 
 ```shell
-$ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" osixia/openldap:latest -x -H ldap://openldap-server:389 -D "cn=admin,dc=ldap,dc=example,dc=com" -b "dc=ldap,dc=example,dc=com" -w password
+$ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" docker.io/osixia/openldap:latest -x -H ldap://openldap-server:389 -D "cn=admin,dc=ldap,dc=example,dc=com" -b "dc=ldap,dc=example,dc=com" -w password
 ```
 
 
@@ -49,7 +49,7 @@ $ ldapsearch -x -H ldap://localhost:4389 -D "cn=admin,dc=ldap,dc=secondary,dc=ex
 using the container:
 
 ```shell
-$ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" osixia/openldap:latest -x -H ldap://openldap-server-secondary:389 -D "cn=admin,dc=ldap,dc=secondary,dc=example,dc=com" -b "dc=ldap,dc=secondary,dc=example,dc=com" -w password
+$ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" docker.io/osixia/openldap:latest -x -H ldap://openldap-server-secondary:389 -D "cn=admin,dc=ldap,dc=secondary,dc=example,dc=com" -b "dc=ldap,dc=secondary,dc=example,dc=com" -w password
 ```
 
 ## Testing with Web UI (phpLDAPadmin)
@@ -57,13 +57,13 @@ $ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" osixia/openl
 Run myphpldapadmin:
 
 ```shell
-$ podman run -it --replace --name phpldapadmin -p 10080:80 -p 10443:443 --hostname phpldapadmin-service --net myldapnet --network-alias phpldapadmin-service --env PHPLDAPADMIN_LDAP_HOSTS="openldap-server"  osixia/phpldapadmin:latest
+$ podman run -it --replace --name phpldapadmin -p 10080:80 -p 10443:443 --hostname phpldapadmin-service --net myldapnet --network-alias phpldapadmin-service --env PHPLDAPADMIN_LDAP_HOSTS="openldap-server"  docker.io/osixia/phpldapadmin:latest
 ```
 
 Another instance for the secondary:
 
 ```shell
-$ podman run -it --replace --name phpldapadmin-secondary -p 20080:80 -p 20443:443 --hostname phpldapadmin-service-secondary --net myldapnet --network-alias phpldapadmin-service-secondary --env PHPLDAPADMIN_LDAP_HOSTS="openldap-server-secondary"   osixia/phpldapadmin:latest
+$ podman run -it --replace --name phpldapadmin-secondary -p 20080:80 -p 20443:443 --hostname phpldapadmin-service-secondary --net myldapnet --network-alias phpldapadmin-service-secondary --env PHPLDAPADMIN_LDAP_HOSTS="openldap-server-secondary"   docker.io/osixia/phpldapadmin:latest
 ```
 
 phpLDAPadmin on https://localhost:10443 (for primary) 
@@ -111,32 +111,57 @@ or using the existing container
 $ podman cp internal.ldif openldap-server-secondary:/tmp/internal.ldif && podman exec -it openldap-server-secondary ldapadd -c -x -H ldap://localhost:389 -D 'cn=admin,dc=ldap,dc=secondary,dc=example,dc=com' -w password -f /tmp/internal.ldif
 ```
 
-They both contains two users with the following path:
- - cn=John Admin,ou=users,dc=ldap,dc=example,dc=com
- - cn=Lorenzo Snidero,ou=users,dc=ldap,dc=example,dc=com
-
-The only difference between schemas is that users in the secondary LDAP tree have the following custom attributes:
- - title
- - employeeNumber
-
-## Example login
-
-In the current configuration we have the following users configured in both external and internal directory:
+In the current configuration we have the following users configured in both primary (external) and secondary (internal) directory:
  - croot 
  - mrossi
  - jdoe
  - lbird
 
-The following ones are present only in the external directory:
+The following ones are present only in the primary (external) directory:
  - jadmin
  - lsnidero
  - jstandard
 
+The only difference between the schemas is that users in the primary (external) directory tree have the following custom attributes in addition:
+ - title
+ - employeeNumber
+
+## Example login
+
+Before to continue you have to regenerate the client secret: go to the RH SSO admin console and access to the client list; select the client named 'merge-domain-client' and in the tab Credentials click on the 'Regenerate Secret' button and copy the new client secret; execute the following command replacing the copied value:
+
+```shell
+export CLIENT_SECRET="<client_secret>"
+```
+
 Login with `Larry Bird`:
 
 ```shell
-$ curl -d 'username=lbird' -v http://localhost:9080/auth/realms/multiple-ldap/protocol/openid-connect/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password' -d 'client_id=merge-domain-client' -d 'password=password' -d 'client_secret=<client_secret>' | jq -r .access_token | cut -d '.' -f2 | base64 -d | jq
+$ curl -d 'username=lbird' -v http://localhost:8080/auth/realms/multiple-ldap/protocol/openid-connect/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password' -d 'client_id=merge-domain-client' -d 'password=password' -d "client_secret=${CLIENT_SECRET}" | \
+jq -r .access_token | \
+cut -d '.' -f2 | \
+sed 's/-/+/g; s/_/\//g' | \
+awk '{ len = length % 4; if (len == 2) { print $0 "==" } else if (len == 3) { print $0 "=" } else { print $0 } }' | \
+base64 -d | \
+jq
 ```
+or using python to decode Base64Url:
+```shell
+$ curl -d 'username=lbird' -v http://localhost:8080/auth/realms/multiple-ldap/protocol/openid-connect/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password' -d 'client_id=merge-domain-client' -d 'password=password' -d "client_secret=${CLIENT_SECRET}" | \
+jq -r .access_token | \
+cut -d '.' -f2 | \
+python3 -c "import base64, sys; print(base64.urlsafe_b64decode(sys.stdin.read() + '==').decode())" | \
+jq
+```
+or using perl to decode Base64Url:
+```shell
+$ curl -d 'username=lbird' -v http://localhost:8080/auth/realms/multiple-ldap/protocol/openid-connect/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password' -d 'client_id=merge-domain-client' -d 'password=password' -d "client_secret=${CLIENT_SECRET}" | \
+jq -r .access_token | \
+cut -d '.' -f2 | \
+perl -MMIME::Base64=decode_base64url -ne 'print decode_base64url($_)' | \
+jq
+```
+
 This user exists also in the **INTERNAL** directory where he lacks the `roomNumber` property. 
 In the internal repository his name and surname (`givenName` and `sn` LDAP attributes) are in uppercase. In the **EXTERNAL** directory they appear in the correct case.  
 
@@ -146,7 +171,7 @@ The output is something like this:
   "exp": 1743498858,
   "iat": 1743498558,
   "jti": "e2dd3728-0655-4225-9b8e-355031e7e674",
-  "iss": "http://localhost:9080/auth/realms/multiple-ldap",
+  "iss": "http://localhost:8080/auth/realms/multiple-ldap",
   "aud": "account",
   "sub": "1e83c0da-e3ab-4f01-81e5-51fb6c7ce075",
   "typ": "Bearer",
@@ -193,7 +218,13 @@ The `sn` claim is created from the custom provider logic thus using the value wr
 
 Login with `Johnny Standard`
 ```shell
-$ curl -d 'username=jstandard' -v http://localhost:9080/auth/realms/multiple-ldap/protocol/openid-connect/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password' -d 'client_id=merge-domain-client' -d 'password=password' -d 'client_secret=<client_secret>' | jq -r .access_token | cut -d '.' -f2 | base64 -d | jq
+$ curl -d 'username=jstandard' -v http://localhost:8080/auth/realms/multiple-ldap/protocol/openid-connect/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password' -d 'client_id=merge-domain-client' -d 'password=password' -d "client_secret=${CLIENT_SECRET}" | \
+jq -r .access_token | \
+cut -d '.' -f2 | \
+sed 's/-/+/g; s/_/\//g' | \
+awk '{ len = length % 4; if (len == 2) { print $0 "==" } else if (len == 3) { print $0 "=" } else { print $0 } }' | \
+base64 -d | \
+jq
 ```
 
 ## Stop containers
@@ -212,7 +243,7 @@ $ podman stop --ignore openldap-server openldap-server-secondary phpldapadmin-se
 How do I know my user's encrypted password is ok?
 
 ```shell
-$ podman run -it --entrypoint="/usr/sbin/slappasswd"  osixia/openldap:latest -h {MD5} -s "password"
+$ podman run -it --entrypoint="/usr/sbin/slappasswd"  docker.io/osixia/openldap:latest -h {MD5} -s "password"
 ```
 
 The output will be `{MD5}X03MO1qnZdYdgyfeuILPmQ==`

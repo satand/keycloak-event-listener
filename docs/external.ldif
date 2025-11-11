@@ -21,12 +21,12 @@
 version: 1
 
 # Entry 1: dc=ldap,dc=example,dc=com
-dn: dc=ldap,dc=example,dc=com
-dc: ldap
-o: My Company
-objectclass: top
-objectclass: dcObject
-objectclass: organization
+# dn: dc=ldap,dc=example,dc=com
+# dc: ldap
+# o: My Company
+# objectclass: top
+# objectclass: dcObject
+# objectclass: organization
 
 # Entry 2: ou=groups,dc=ldap,dc=example,dc=com
 dn: ou=groups,dc=ldap,dc=example,dc=com

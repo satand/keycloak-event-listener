@@ -6,7 +6,7 @@ It is built around Keycloak libraries and extensions and can be deployed.
 ## Requirements
 * Java: JDK 11 (must be the same running Keycloak / SSO)
 * Apache Maven
-* Running instance of Keycloak
+* Running instance of Keycloak (to install one use this [reference](https://docs.redhat.com/en/documentation/red_hat_single_sign-on/7.6/html/server_installation_and_configuration_guide/installing_the_software#installing_rh_sso_from_a_zip_file))
 
 ## Tested Configurations
 * Red Hat SSO 7.6.* Single Node
@@ -32,7 +32,7 @@ This generates target/sso-event-listener-provider.jar**
 
 # How to activate Event Listener
 1. Access to Selected realm (/auth/admin/{REALM}/console). User privileges must allow event management
-2. Click on "Events" link on left menu (see image)
+2. Click on "Events" link on left menu (see image) and then on the "Config" tab
 3. Click on "Event Listener" field, a dropdown will appear and will see 'multiple-ldap-EventListener'
 4. By Clicking on that Event listener will be added to the combo.
 5. Click Save.

@@ -1,9 +1,6 @@
 package com.redhat.sso.service;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.w3c.dom.Attr;
-
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -12,7 +9,6 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,14 +18,9 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.eq;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -39,10 +30,12 @@ class LdapServiceUnitTest {
 
     @Test
     void testNoUserFound() throws NamingException {
-        DirContext dirContext = mock(DirContext.class);
+
+        @SuppressWarnings("unchecked")
         NamingEnumeration<SearchResult> namingEnumeration = mock(NamingEnumeration.class);
         when(namingEnumeration.hasMoreElements()).thenReturn(false);
 
+        DirContext dirContext = mock(DirContext.class);
         when(dirContext.search(anyString(),anyString(),any(SearchControls.class))).thenReturn(namingEnumeration);
 
         Map<String,String> attributeMapping = new HashMap<>();
