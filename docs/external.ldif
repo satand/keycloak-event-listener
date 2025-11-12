@@ -1,5 +1,5 @@
-# LDIF Export for dc=ldap,dc=example,dc=com
-# Server: openldap-server (openldap-server)
+# LDIF Export for dc=ldap,dc=external,dc=example,dc=com
+# Server: external-openldap-server (external-openldap-server)
 # Search Scope: sub
 # Search Filter: (objectClass=*)
 # Total Entries: 14
@@ -20,22 +20,22 @@
 
 version: 1
 
-# Entry 1: dc=ldap,dc=example,dc=com
-# dn: dc=ldap,dc=example,dc=com
+# Entry 1: dc=ldap,dc=external,dc=example,dc=com
+# dn: dc=ldap,dc=external,dc=example,dc=com
 # dc: ldap
 # o: My Company
 # objectclass: top
 # objectclass: dcObject
 # objectclass: organization
 
-# Entry 2: ou=groups,dc=ldap,dc=example,dc=com
-dn: ou=groups,dc=ldap,dc=example,dc=com
+# Entry 2: ou=groups,dc=ldap,dc=external,dc=example,dc=com
+dn: ou=groups,dc=ldap,dc=external,dc=example,dc=com
 objectclass: organizationalUnit
 objectclass: top
 ou: groups
 
-# Entry 3: cn=admins,ou=groups,dc=ldap,dc=example,dc=com
-dn: cn=admins,ou=groups,dc=ldap,dc=example,dc=com
+# Entry 3: cn=admins,ou=groups,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=admins,ou=groups,dc=ldap,dc=external,dc=example,dc=com
 cn: admins
 description: This is the group of admins
 gidnumber: 501
@@ -43,8 +43,8 @@ memberuid: jadmin
 objectclass: posixGroup
 objectclass: top
 
-# Entry 4: cn=standard,ou=groups,dc=ldap,dc=example,dc=com
-dn: cn=standard,ou=groups,dc=ldap,dc=example,dc=com
+# Entry 4: cn=standard,ou=groups,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=standard,ou=groups,dc=ldap,dc=external,dc=example,dc=com
 cn: standard
 description: This is a group of standard users
 gidnumber: 500
@@ -52,36 +52,36 @@ memberuid: lsnidero
 objectclass: posixGroup
 objectclass: top
 
-# Entry 5: ou=roleManager,dc=ldap,dc=example,dc=com
-dn: ou=roleManager,dc=ldap,dc=example,dc=com
+# Entry 5: ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
+dn: ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 objectclass: organizationalUnit
 objectclass: top
 ou: roleManager
 
-# Entry 6: cn=admin-role,ou=roleManager,dc=ldap,dc=example,dc=com
-dn: cn=admin-role,ou=roleManager,dc=ldap,dc=example,dc=com
+# Entry 6: cn=admin-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=admin-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 cn: admin-role
 objectclass: organizationalRole
 objectclass: top
-roleoccupant: cn=admins,ou=groups,dc=ldap,dc=example,dc=com
+roleoccupant: cn=admins,ou=groups,dc=ldap,dc=external,dc=example,dc=com
 
-# Entry 7: cn=standard-role,ou=roleManager,dc=ldap,dc=example,dc=com
-dn: cn=standard-role,ou=roleManager,dc=ldap,dc=example,dc=com
+# Entry 7: cn=standard-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=standard-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 cn: standard-role
 objectclass: organizationalRole
 objectclass: top
-roleoccupant: cn=standard,ou=groups,dc=ldap,dc=example,dc=com
+roleoccupant: cn=standard,ou=groups,dc=ldap,dc=external,dc=example,dc=com
 
-# Entry 8: ou=users,dc=ldap,dc=example,dc=com
-dn: ou=users,dc=ldap,dc=example,dc=com
+# Entry 8: ou=users,dc=ldap,dc=external,dc=example,dc=com
+dn: ou=users,dc=ldap,dc=external,dc=example,dc=com
 objectclass: organizationalUnit
 objectclass: top
 ou: users
 
-# Entry 9: cn=jadmin,ou=users,dc=ldap,dc=example,dc=com
-dn: cn=jadmin,ou=users,dc=ldap,dc=example,dc=com
+# Entry 9: cn=jadmin,ou=users,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=jadmin,ou=users,dc=ldap,dc=external,dc=example,dc=com
 cn: jadmin
-departmentnumber: cn=admin-role,ou=roleManager,dc=ldap,dc=example,dc=com
+departmentnumber: cn=admin-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 gidnumber: 501
 givenname: John
 homedirectory: /home/users/jadmin
@@ -98,10 +98,10 @@ initials: RIEJA
 employeenumber: 1
 title: Administrator
 
-# Entry 10: cn=lsnidero,ou=users,dc=ldap,dc=example,dc=com
-dn: cn=lsnidero,ou=users,dc=ldap,dc=example,dc=com
+# Entry 10: cn=lsnidero,ou=users,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=lsnidero,ou=users,dc=ldap,dc=external,dc=example,dc=com
 cn: lsnidero
-departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=example,dc=com
+departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 gidnumber: 500
 givenname: Lorenzo
 homedirectory: /home/users/lsnidero
@@ -118,10 +118,10 @@ initials: RIELS
 employeenumber: 42
 title: Consultant
 
-# Entry 11: cn=jstandard,ou=users,dc=ldap,dc=example,dc=com
-dn: cn=jstandard,ou=users,dc=ldap,dc=example,dc=com
+# Entry 11: cn=jstandard,ou=users,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=jstandard,ou=users,dc=ldap,dc=external,dc=example,dc=com
 cn: jstandard
-departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=example,dc=com
+departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 gidnumber: 500
 givenname: Johnny
 homedirectory: /home/users/jstandard
@@ -140,10 +140,10 @@ title: Contractor
 
 # Following users are also INTERNAL
 
-# Entry 12: cn=croot,ou=users,dc=ldap,dc=example,dc=com
-dn: cn=croot,ou=users,dc=ldap,dc=example,dc=com
+# Entry 12: cn=croot,ou=users,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=croot,ou=users,dc=ldap,dc=external,dc=example,dc=com
 cn: croot
-departmentnumber: cn=admin-role,ou=roleManager,dc=ldap,dc=example,dc=com
+departmentnumber: cn=admin-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 gidnumber: 501
 givenname: Carl
 homedirectory: /home/users/croot
@@ -160,10 +160,10 @@ initials: CR
 employeenumber: 3
 title: Administrator
 
-# Entry 13: cn=mrossi,ou=users,dc=ldap,dc=example,dc=com
-dn: cn=mrossi,ou=users,dc=ldap,dc=example,dc=com
+# Entry 13: cn=mrossi,ou=users,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=mrossi,ou=users,dc=ldap,dc=external,dc=example,dc=com
 cn: mrossi
-departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=example,dc=com
+departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 gidnumber: 500
 givenname: Mario
 homedirectory: /home/users/mrossi
@@ -180,10 +180,10 @@ initials: MR
 employeenumber: 4
 title: Developer
 
-# Entry 14: cn=jdoe,ou=users,dc=ldap,dc=example,dc=com
-dn: cn=jdoe,ou=users,dc=ldap,dc=example,dc=com
+# Entry 14: cn=jdoe,ou=users,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=jdoe,ou=users,dc=ldap,dc=external,dc=example,dc=com
 cn: jdoe
-departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=example,dc=com
+departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 gidnumber: 500
 givenname: John
 homedirectory: /home/users/jdoe
@@ -200,10 +200,10 @@ initials: JD
 employeenumber: 5
 title: Developer
 
-# Entry 14: cn=lbird,ou=users,dc=ldap,dc=example,dc=com
-dn: cn=lbird,ou=users,dc=ldap,dc=example,dc=com
+# Entry 14: cn=lbird,ou=users,dc=ldap,dc=external,dc=example,dc=com
+dn: cn=lbird,ou=users,dc=ldap,dc=external,dc=example,dc=com
 cn: lbird
-departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=example,dc=com
+departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=external,dc=example,dc=com
 gidnumber: 500
 givenname: Larry
 homedirectory: /home/users/lbird

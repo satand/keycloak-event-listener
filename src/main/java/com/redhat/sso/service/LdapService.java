@@ -15,20 +15,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 public class LdapService {
 
     private static final Logger LOGGER = Logger.getLogger(LdapService.class.getName());
 
-    public DirContext initContext(String providerUrl, String securityPrincipal, String securityCredentials) throws NamingException {
+    public DirContext initContext(List<String> providerUrls, String securityPrincipal, String securityCredentials) throws NamingException {
         Hashtable<String, String> env = new Hashtable<>();
 
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, providerUrl);
+        env.put(Context.PROVIDER_URL, providerUrls.stream().reduce("", (a, b) -> a + " " + b));
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL, securityPrincipal);
         env.put(Context.SECURITY_CREDENTIALS, securityCredentials);
+        // env.put("com.sun.jndi.ldap.connect.pool", "true");
+        env.put("com.sun.jndi.ldap.connect.timeout", "5000"); // 5 sec
 
         return new InitialDirContext(env);
     }

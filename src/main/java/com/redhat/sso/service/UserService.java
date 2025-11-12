@@ -37,7 +37,7 @@ public class UserService {
 
         LOGGER.infof("Searching a user with username %s on external LDAP server", username);
 
-        DirContext context = ldapService.initContext(config.getProviderUrl(), config.getSecurityPrincipal(), config.getSecurityCredentials());
+        DirContext context = ldapService.initContext(config.getProviderUrls(), config.getSecurityPrincipal(), config.getSecurityCredentials());
         LOGGER.debug("External LDAP context initialized ");
 
         try {

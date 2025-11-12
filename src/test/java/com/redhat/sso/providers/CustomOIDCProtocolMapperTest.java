@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @SetEnvironmentVariable.SetEnvironmentVariables({
-        @SetEnvironmentVariable(key = "EXTERNAL_LDAP_FEDERATION_PROVIDER_URL", value = "ldap://localhost:3389"),
+        @SetEnvironmentVariable(key = "EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS", value = "ldap://localhost:3389"),
         @SetEnvironmentVariable(key = "EXTERNAL_LDAP_SECURITY_PRINCIPAL", value = "cn=admin,dc=ldap,dc=example,dc=com"),
         @SetEnvironmentVariable(key = "EXTERNAL_LDAP_SECURITY_CREDENTIALS", value = "password"),
         @SetEnvironmentVariable(key = "EXTERNAL_LDAP_USERS_DN", value = "ou=users,dc=ldap,dc=example,dc=com"),

@@ -12,103 +12,143 @@ Start new internal network
 ```shell
 $ podman network create --ignore  myldapnet
 ```
-## OpenLDAP primary and secondary server 
+## OpenLDAP internal and external server 
 
-Run openldap (slapd) for **primary** (or **EXTERNAL**) directory:
+Run openldap (slapd) for **INTERNAL** directory:
 
 ```shell
-$ podman run -it --replace  -p 3389:389 -p 3636:636 --net myldapnet --network-alias openldap-server --name openldap-server --env LDAP_ORGANISATION="My Company" --env LDAP_DOMAIN="ldap.example.com" --env LDAP_ADMIN_PASSWORD="password"  docker.io/osixia/openldap:latest
+$ podman run -it --replace  -p 1389:389 -p 1636:636 --net myldapnet --network-alias internal-openldap-server --name internal-openldap-server --env LDAP_ORGANISATION="My Company" --env LDAP_DOMAIN="ldap.internal.example.com" --env LDAP_ADMIN_PASSWORD="password" docker.io/osixia/openldap:latest
 ```
 
-Run openldap (slapd) for **secondary** (or **INTERNAL**) directory:
+Run openldap (slapd) for **EXTERNAL** directory:
 
 ```shell
-$ podman run -it --replace  -p 4389:389 -p 4636:636 --net myldapnet --network-alias openldap-server-secondary --name openldap-server-secondary --env LDAP_ORGANISATION="My Company" --env LDAP_DOMAIN="ldap.secondary.example.com" --env LDAP_ADMIN_PASSWORD="password"  docker.io/osixia/openldap:latest
+$ podman run -it --replace  -p 2389:389 -p 2636:636 --net myldapnet --network-alias external-openldap-server --name external-openldap-server --env LDAP_ORGANISATION="My Company" --env LDAP_DOMAIN="ldap.external.example.com" --env LDAP_ADMIN_PASSWORD="password" docker.io/osixia/openldap:latest
+```
+
+Run openldap (slapd) for **EXTERNAL-BIS** directory:
+
+```shell
+$ podman run -it --replace  -p 3389:389 -p 3636:636 --net myldapnet --network-alias external-bis-openldap-server --name external-bis-openldap-server --env LDAP_ORGANISATION="My Company" --env LDAP_DOMAIN="ldap.external.example.com" --env LDAP_ADMIN_PASSWORD="password"  docker.io/osixia/openldap:latest
 ```
 
 ## Testing login with admin with ldapsearch
 
-Search of the admin user on primary server: 
+Search of the admin user on the internal server: 
 
 ```shell
-$ ldapsearch -x -H ldap://localhost:3389 -D "cn=admin,dc=ldap,dc=example,dc=com" -b "dc=ldap,dc=example,dc=com" -w password
+$ ldapsearch -x -H ldap://localhost:1389 -D "cn=admin,dc=ldap,dc=internal,dc=example,dc=com" -b "dc=ldap,dc=internal,dc=example,dc=com" -w password
 ```
 or, if you prefer, use the container instead:
 
 ```shell
-$ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" docker.io/osixia/openldap:latest -x -H ldap://openldap-server:389 -D "cn=admin,dc=ldap,dc=example,dc=com" -b "dc=ldap,dc=example,dc=com" -w password
+$ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" docker.io/osixia/openldap:latest -x -H ldap://internal-openldap-server:389 -D "cn=admin,dc=ldap,dc=internal,dc=example,dc=com" -b "dc=ldap,dc=internal,dc=example,dc=com" -w password
 ```
 
-
-Search of the admin user on the secondary server:
+Search of the admin user on the external server:
 
 ```shell
-$ ldapsearch -x -H ldap://localhost:4389 -D "cn=admin,dc=ldap,dc=secondary,dc=example,dc=com" -b "dc=ldap,dc=secondary,dc=example,dc=com" -w password
+$ ldapsearch -x -H ldap://localhost:2389 -D "cn=admin,dc=ldap,dc=external,dc=example,dc=com" -b "dc=ldap,dc=external,dc=example,dc=com" -w password
 ```
 
 using the container:
 
 ```shell
-$ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" docker.io/osixia/openldap:latest -x -H ldap://openldap-server-secondary:389 -D "cn=admin,dc=ldap,dc=secondary,dc=example,dc=com" -b "dc=ldap,dc=secondary,dc=example,dc=com" -w password
+$ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" docker.io/osixia/openldap:latest -x -H ldap://external-openldap-server:389 -D "cn=admin,dc=ldap,dc=external,dc=example,dc=com" -b "dc=ldap,dc=external,dc=example,dc=com" -w password
+```
+
+Search of the admin user on the secondary-bis server:
+
+```shell
+$ ldapsearch -x -H ldap://localhost:3389 -D "cn=admin,dc=ldap,dc=external,dc=example,dc=com" -b "dc=ldap,dc=external,dc=example,dc=com" -w password
+```
+
+using the container:
+
+```shell
+$ podman run -it --net myldapnet --entrypoint="/usr/bin/ldapsearch" docker.io/osixia/openldap:latest -x -H ldap://external-bis-openldap-server:389 -D "cn=admin,dc=ldap,dc=external,dc=example,dc=com" -b "dc=ldap,dc=external,dc=example,dc=com" -w password
 ```
 
 ## Testing with Web UI (phpLDAPadmin)
 
-Run myphpldapadmin:
+Run myphpldapadmin for the internal directory:
 
 ```shell
-$ podman run -it --replace --name phpldapadmin -p 10080:80 -p 10443:443 --hostname phpldapadmin-service --net myldapnet --network-alias phpldapadmin-service --env PHPLDAPADMIN_LDAP_HOSTS="openldap-server"  docker.io/osixia/phpldapadmin:latest
+$ podman run -it --replace --name internal-phpldapadmin -p 10080:80 -p 10443:443 --net myldapnet --hostname internal-phpldapadmin-service --network-alias internal-phpldapadmin-service --env PHPLDAPADMIN_LDAP_HOSTS="internal-openldap-server"  docker.io/osixia/phpldapadmin:latest
 ```
 
-Another instance for the secondary:
+Another instance for the external directory:
 
 ```shell
-$ podman run -it --replace --name phpldapadmin-secondary -p 20080:80 -p 20443:443 --hostname phpldapadmin-service-secondary --net myldapnet --network-alias phpldapadmin-service-secondary --env PHPLDAPADMIN_LDAP_HOSTS="openldap-server-secondary"   docker.io/osixia/phpldapadmin:latest
+$ podman run -it --replace --name external-phpldapadmin -p 20080:80 -p 20443:443 --net myldapnet --hostname external-phpldapadmin-service --network-alias external-phpldapadmin-service --env PHPLDAPADMIN_LDAP_HOSTS="external-openldap-server"  docker.io/osixia/phpldapadmin:latest
 ```
 
-phpLDAPadmin on https://localhost:10443 (for primary) 
+Another instance for the secondary-bis directory:
+
+```shell
+$ podman run -it --replace --name external-bis-phpldapadmin -p 30080:80 -p 30443:443 --net myldapnet --hostname external-bis-phpldapadmin-service --network-alias external-bis-phpldapadmin-service --env PHPLDAPADMIN_LDAP_HOSTS="external-bis-openldap-server"  docker.io/osixia/phpldapadmin:latest
+```
+
+internal-phpLDAPadmin on https://localhost:10443 (for internal directory) 
 
 login with:
- - username: **cn=admin,dc=ldap,dc=example,dc=com**
+ - username: **cn=admin,dc=ldap,dc=internal,dc=example,dc=com**
  - password: **password**
 
-phpLDAPadmin on https://localhost:20443 (for secondary)
+external-phpLDAPadmin on https://localhost:20443 (for external directory)
 
 login with:
- - username: **cn=admin,dc=ldap,dc=secondary,dc=example,dc=com**
+ - username: **cn=admin,dc=ldap,dc=external,dc=example,dc=com**
  - password: **password**
 
+ external-bis-phpLDAPadmin on https://localhost:30443 (for external-bis directory)
+
+login with:
+ - username: **cn=admin,dc=ldap,dc=external,dc=example,dc=com**
+ - password: **password**
 
 ## Loading a more complex schema
 
 In order to have a couple of users you can import the following LDAP schemas
 LDIF of my whole LDAP tree for the primary forest.
 
-Schema for the primary is located [here](external.ldif)
-Schema for the secondary is located [here](internal.ldif)
+Schema for the internal directory is located [here](internal.ldif)
+Schema for the external directory is located [here](external.ldif)
 
 To add the schema you can import the ldif file through the web UI of phpLDAPAdmin or by executing the following commands.
 
-For primary domain:
+
+For the internal directory:
 
 ```shell
-$ ldapadd -c -x -H ldap://localhost:3389 -D "cn=admin,dc=ldap,dc=example,dc=com" -w password -f external.ldif
+$ ldapadd -c -x -H ldap://localhost:1389 -D "cn=admin,dc=ldap,dc=internal,dc=example,dc=com" -w password -f internal.ldif
 ```
 
 or using the existing container
 ```shell
-$ podman cp external.ldif openldap-server:/tmp/external.ldif && podman exec -it openldap-server ldapadd -c -x -H ldap://localhost:389 -D 'cn=admin,dc=ldap,dc=example,dc=com' -w password -f /tmp/external.ldif
+$ podman cp internal.ldif openldap-server-secondary:/tmp/internal.ldif && podman exec -it internal-openldap-server ldapadd -c -x -H ldap://localhost:389 -D 'cn=admin,dc=ldap,dc=internal,dc=example,dc=com' -w password -f /tmp/internal.ldif
 ```
 
-For secondary domain:
+For the external directory:
 
 ```shell
-$ ldapadd -c -x -H ldap://localhost:4389 -D "cn=admin,dc=ldap,dc=secondary,dc=example,dc=com" -w password -f internal.ldif
+$ ldapadd -c -x -H ldap://localhost:2389 -D "cn=admin,dc=ldap,dc=external,dc=example,dc=com" -w password -f external.ldif
 ```
 
 or using the existing container
 ```shell
-$ podman cp internal.ldif openldap-server-secondary:/tmp/internal.ldif && podman exec -it openldap-server-secondary ldapadd -c -x -H ldap://localhost:389 -D 'cn=admin,dc=ldap,dc=secondary,dc=example,dc=com' -w password -f /tmp/internal.ldif
+$ podman cp external.ldif openldap-server:/tmp/external.ldif && podman exec -it external-openldap-server ldapadd -c -x -H ldap://localhost:389 -D 'cn=admin,dc=ldap,dc=external,dc=example,dc=com' -w password -f /tmp/external.ldif
+```
+
+For the external-bis directory:
+
+```shell
+$ ldapadd -c -x -H ldap://localhost:3389 -D "cn=admin,dc=ldap,dc=external,dc=example,dc=com" -w password -f external.ldif
+```
+
+or using the existing container
+```shell
+$ podman cp external.ldif openldap-server:/tmp/external.ldif && podman exec -it external-bis-openldap-server ldapadd -c -x -H ldap://localhost:389 -D 'cn=admin,dc=ldap,dc=external,dc=example,dc=com' -w password -f /tmp/external.ldif
 ```
 
 In the current configuration we have the following users configured in both primary (external) and secondary (internal) directory:

@@ -1,13 +1,14 @@
 package com.redhat.sso.config;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ProviderConfig {
 
-    static final String EXTERNAL_LDAP_FEDERATION_PROVIDER_URL = "EXTERNAL_LDAP_FEDERATION_PROVIDER_URL";
+    static final String EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS = "EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS";
     static final String EXTERNAL_LDAP_SECURITY_PRINCIPAL = "EXTERNAL_LDAP_SECURITY_PRINCIPAL";
     static final String EXTERNAL_LDAP_SECURITY_CREDENTIALS = "EXTERNAL_LDAP_SECURITY_CREDENTIALS";
     static final String EXTERNAL_LDAP_USERS_DN = "EXTERNAL_LDAP_USERS_DN";
@@ -16,7 +17,7 @@ public class ProviderConfig {
 
     private static final String ENV_NOT_PRESENT_ERROR = "The environment variable %s is mandatory but is not present";
 
-    private final String providerUrl;
+    private final List<String> providerUrls;
     private final String securityPrincipal;
     private final String securityCredentials;
     private final String usersDN;
@@ -24,7 +25,7 @@ public class ProviderConfig {
     private final String externalUsernameFilter;
 
     public ProviderConfig() {
-        this(System.getenv(EXTERNAL_LDAP_FEDERATION_PROVIDER_URL),
+        this(System.getenv(EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS),
                 System.getenv(EXTERNAL_LDAP_SECURITY_PRINCIPAL),
                 System.getenv(EXTERNAL_LDAP_SECURITY_CREDENTIALS),
                 System.getenv(EXTERNAL_LDAP_USERS_DN),
@@ -33,9 +34,12 @@ public class ProviderConfig {
         );
     }
 
-    public ProviderConfig(String providerUrl, String securityPrincipal, String securityCredentials, String usersDN, String externalAttributesMap, String externalUsernameFilter) {
+    public ProviderConfig(String providerUrls, String securityPrincipal, String securityCredentials, String usersDN, String externalAttributesMap, String externalUsernameFilter) {
 
-        this.providerUrl = Optional.ofNullable(providerUrl).orElseThrow(() -> new IllegalArgumentException(String.format(ENV_NOT_PRESENT_ERROR, EXTERNAL_LDAP_FEDERATION_PROVIDER_URL)));
+        this.providerUrls = Arrays.stream(
+                Optional.ofNullable(providerUrls).orElseThrow(() -> new IllegalArgumentException(String.format(ENV_NOT_PRESENT_ERROR, EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS)))
+                    .split(","))
+            .collect(Collectors.toList());            
         this.securityPrincipal = Optional.ofNullable(securityPrincipal).orElseThrow(() -> new IllegalArgumentException(String.format(ENV_NOT_PRESENT_ERROR, EXTERNAL_LDAP_SECURITY_PRINCIPAL)));
         this.securityCredentials = Optional.ofNullable(securityCredentials).orElseThrow(() -> new IllegalArgumentException(String.format(ENV_NOT_PRESENT_ERROR, EXTERNAL_LDAP_SECURITY_CREDENTIALS)));
         this.usersDN = Optional.ofNullable(usersDN).orElseThrow(() -> new IllegalArgumentException(String.format(ENV_NOT_PRESENT_ERROR, EXTERNAL_LDAP_USERS_DN)));
@@ -45,11 +49,10 @@ public class ProviderConfig {
                 .map(s -> s.split("="))
                 .collect(Collectors.toMap(k -> k[0], v -> v[1]));
         this.externalUsernameFilter = Optional.ofNullable(externalUsernameFilter).orElseThrow(() -> new IllegalArgumentException(String.format(ENV_NOT_PRESENT_ERROR, EXTERNAL_LDAP_USERNAME_FILTER)));
-
     }
 
-    public String getProviderUrl() {
-        return providerUrl;
+    public List<String> getProviderUrls() {
+        return providerUrls;
     }
 
     public String getSecurityPrincipal() {

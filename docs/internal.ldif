@@ -1,5 +1,5 @@
-# LDIF Export for dc=ldap,dc=secondary,dc=example,dc=com
-# Server: openldap-server-secondary (openldap-server-secondary)
+# LDIF Export for dc=ldap,dc=internal,dc=example,dc=com
+# Server: internal-openldap-server (internal-openldap-server)
 # Search Scope: sub
 # Search Filter: (objectClass=*)
 # Total Entries: 12
@@ -18,22 +18,22 @@
 
 version: 1
 
-# Entry 1: dc=ldap,dc=secondary,dc=example,dc=com
-# dn: dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 1: dc=ldap,dc=internal,dc=example,dc=com
+# dn: dc=ldap,dc=internal,dc=example,dc=com
 # dc: ldap
 # o: My Company
 # objectclass: top
 # objectclass: dcObject
 # objectclass: organization
 
-# Entry 2: ou=groups,dc=ldap,dc=secondary,dc=example,dc=com
-dn: ou=groups,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 2: ou=groups,dc=ldap,dc=internal,dc=example,dc=com
+dn: ou=groups,dc=ldap,dc=internal,dc=example,dc=com
 objectclass: organizationalUnit
 objectclass: top
 ou: groups
 
-# Entry 3: cn=admins,ou=groups,dc=ldap,dc=secondary,dc=example,dc=com
-dn: cn=admins,ou=groups,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 3: cn=admins,ou=groups,dc=ldap,dc=internal,dc=example,dc=com
+dn: cn=admins,ou=groups,dc=ldap,dc=internal,dc=example,dc=com
 cn: admins
 description: This is the group of admins
 gidnumber: 501
@@ -41,8 +41,8 @@ memberuid: jadmin
 objectclass: posixGroup
 objectclass: top
 
-# Entry 4: cn=standard,ou=groups,dc=ldap,dc=secondary,dc=example,dc=com
-dn: cn=standard,ou=groups,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 4: cn=standard,ou=groups,dc=ldap,dc=internal,dc=example,dc=com
+dn: cn=standard,ou=groups,dc=ldap,dc=internal,dc=example,dc=com
 cn: standard
 description: This is a group of standard users
 gidnumber: 500
@@ -50,36 +50,36 @@ memberuid: lsnidero
 objectclass: posixGroup
 objectclass: top
 
-# Entry 5: ou=roleManager,dc=ldap,dc=secondary,dc=example,dc=com
-dn: ou=roleManager,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 5: ou=roleManager,dc=ldap,dc=internal,dc=example,dc=com
+dn: ou=roleManager,dc=ldap,dc=internal,dc=example,dc=com
 objectclass: organizationalUnit
 objectclass: top
 ou: roleManager
 
-# Entry 6: cn=admin-role,ou=roleManager,dc=ldap,dc=secondary,dc=example,d...
-dn: cn=admin-role,ou=roleManager,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 6: cn=admin-role,ou=roleManager,dc=ldap,dc=internal,dc=example,d...
+dn: cn=admin-role,ou=roleManager,dc=ldap,dc=internal,dc=example,dc=com
 cn: admin-role
 objectclass: organizationalRole
 objectclass: top
-roleoccupant: cn=admins,ou=groups,dc=ldap,dc=secondary,dc=example,dc=com
+roleoccupant: cn=admins,ou=groups,dc=ldap,dc=internal,dc=example,dc=com
 
-# Entry 7: cn=standard-role,ou=roleManager,dc=ldap,dc=secondary,dc=exampl...
-dn: cn=standard-role,ou=roleManager,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 7: cn=standard-role,ou=roleManager,dc=ldap,dc=internal,dc=exampl...
+dn: cn=standard-role,ou=roleManager,dc=ldap,dc=internal,dc=example,dc=com
 cn: standard-role
 objectclass: organizationalRole
 objectclass: top
-roleoccupant: cn=standard,ou=groups,dc=ldap,dc=secondary,dc=example,dc=com
+roleoccupant: cn=standard,ou=groups,dc=ldap,dc=internal,dc=example,dc=com
 
-# Entry 8: ou=users,dc=ldap,dc=secondary,dc=example,dc=com
-dn: ou=users,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 8: ou=users,dc=ldap,dc=internal,dc=example,dc=com
+dn: ou=users,dc=ldap,dc=internal,dc=example,dc=com
 objectclass: organizationalUnit
 objectclass: top
 ou: users
 
-# Entry 9: cn=croot,ou=users,dc=ldap,dc=secondary,dc=example,dc=com
-dn: cn=croot,ou=users,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 9: cn=croot,ou=users,dc=ldap,dc=internal,dc=example,dc=com
+dn: cn=croot,ou=users,dc=ldap,dc=internal,dc=example,dc=com
 cn: croot
-departmentnumber: cn=admin-role,ou=roleManager,dc=ldap,dc=secondary,dc=example,dc=com
+departmentnumber: cn=admin-role,ou=roleManager,dc=ldap,dc=internal,dc=example,dc=com
 gidnumber: 501
 givenname: Carl
 homedirectory: /home/users/croot
@@ -94,10 +94,10 @@ uidnumber: 1003
 userpassword: {MD5}X03MO1qnZdYdgyfeuILPmQ==
 initials: CR
 
-# Entry 10: cn=mrossi,ou=users,dc=ldap,dc=secondary,dc=example,dc=com
-dn: cn=mrossi,ou=users,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 10: cn=mrossi,ou=users,dc=ldap,dc=internal,dc=example,dc=com
+dn: cn=mrossi,ou=users,dc=ldap,dc=internal,dc=example,dc=com
 cn: mrossi
-departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=secondary,dc=example,dc=com
+departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=internal,dc=example,dc=com
 gidnumber: 500
 givenname: Mario
 homedirectory: /home/users/mrossi
@@ -112,10 +112,10 @@ uidnumber: 1004
 userpassword: {MD5}X03MO1qnZdYdgyfeuILPmQ==
 initials: MR
 
-# Entry 11: cn=jdoe,ou=users,dc=ldap,dc=secondary,dc=example,dc=com
-dn: cn=jdoe,ou=users,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 11: cn=jdoe,ou=users,dc=ldap,dc=internal,dc=example,dc=com
+dn: cn=jdoe,ou=users,dc=ldap,dc=internal,dc=example,dc=com
 cn: jdoe
-departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=secondary,dc=example,dc=com
+departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=internal,dc=example,dc=com
 gidnumber: 500
 givenname: John
 homedirectory: /home/users/jdoe
@@ -130,10 +130,10 @@ uidnumber: 1005
 userpassword: {MD5}X03MO1qnZdYdgyfeuILPmQ==
 initials: JD
 
-# Entry 12: cn=lbird,ou=users,dc=ldap,dc=secondary,dc=example,dc=com
-dn: cn=lbird,ou=users,dc=ldap,dc=secondary,dc=example,dc=com
+# Entry 12: cn=lbird,ou=users,dc=ldap,dc=internal,dc=example,dc=com
+dn: cn=lbird,ou=users,dc=ldap,dc=internal,dc=example,dc=com
 cn: lbird
-departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=secondary,dc=example,dc=com
+departmentnumber: cn=standard-role,ou=roleManager,dc=ldap,dc=internal,dc=example,dc=com
 gidnumber: 500
 givenname: LARRY
 homedirectory: /home/users/lbird
