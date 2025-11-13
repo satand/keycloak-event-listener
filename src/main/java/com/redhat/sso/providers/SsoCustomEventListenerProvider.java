@@ -9,7 +9,6 @@ import org.keycloak.events.EventType;
 import org.keycloak.events.admin.AdminEvent;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
-import org.keycloak.models.RealmProvider;
 
 /**
  * @author Luciano Di Leonardo
@@ -23,7 +22,6 @@ public class SsoCustomEventListenerProvider implements EventListenerProvider {
     private static final Logger LOGGER = Logger.getLogger(SsoCustomEventListenerProvider.class.getName());
 
     private final KeycloakSession session;
-    private final RealmProvider model;
     private final UserService userService;
     private final EventListenerTransaction transaction = new EventListenerTransaction(
             this::handleAdminEvent,
@@ -32,7 +30,6 @@ public class SsoCustomEventListenerProvider implements EventListenerProvider {
 
     public SsoCustomEventListenerProvider(KeycloakSession session, UserService userService) {
         this.session = session;
-        this.model = session.realms();
         this.userService = userService;
         // enlistPrepare -> if our transaction fails than the user is NOT verified
         // enlist -> if our transaction fails than the user is still verified
@@ -51,7 +48,7 @@ public class SsoCustomEventListenerProvider implements EventListenerProvider {
         try {
             if (EventType.LOGIN.equals(event.getType()) || EventType.IMPERSONATE.equals(event.getType())) {
                 LOGGER.infof("Handling event with Type %s for userId %s", event.getType().name(), event.getUserId());
-                RealmModel realm = model.getRealm(event.getRealmId());
+                RealmModel realm = session.realms().getRealm(event.getRealmId());
                 userService.updateUser(realm, session, event.getUserId());
             }
         } catch (Exception ex) {

@@ -11,12 +11,15 @@ import org.keycloak.models.KeycloakTransactionManager;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RealmProvider;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import javax.naming.NamingException;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,19 +34,10 @@ class SsoCustomEventListenerProviderTest {
     @Mock
     UserService userService;
 
-    @Mock
-    RealmProvider realmProvider;
-
-    @Mock
-    RealmModel realmModel;
-
     SsoCustomEventListenerProvider provider;
 
     @BeforeEach
     void init() throws NamingException {
-
-
-        when(keycloakSession.realms()).thenReturn(realmProvider);
 
         KeycloakTransactionManager keycloakTransactionManager = mock(KeycloakTransactionManager.class);
 
@@ -51,14 +45,18 @@ class SsoCustomEventListenerProviderTest {
 
         doNothing().when(keycloakTransactionManager).enlistPrepare(any());
 
-
         provider = new SsoCustomEventListenerProvider(keycloakSession, userService);
-
-
     }
 
     @Test
     void testOnLoginEvent() throws Exception {
+
+        RealmProvider realmProvider =  mock(RealmProvider.class);
+        RealmModel realmModel =  mock(RealmModel.class);
+
+        when(keycloakSession.realms()).thenReturn(realmProvider);
+        when(realmProvider.getRealm(anyString())).thenReturn(realmModel);
+
         Event loginEvent = new Event();
         loginEvent.setType(EventType.LOGIN);
         loginEvent.setRealmId("rhsso.EventListener-v1");
@@ -66,8 +64,26 @@ class SsoCustomEventListenerProviderTest {
 
         provider.handleClientEvent(loginEvent);
 
-        verify(userService,times(1)).updateUser(any(),any(),eq("mario.rossi"));
+        verify(userService,times(1)).updateUser(any(),any(),eq(loginEvent.getUserId()));
+    }
 
+    @Test
+    void testOnImpersonateEvent() throws Exception {
+
+        RealmProvider realmProvider =  mock(RealmProvider.class);
+        RealmModel realmModel =  mock(RealmModel.class);
+
+        when(keycloakSession.realms()).thenReturn(realmProvider);
+        when(realmProvider.getRealm(anyString())).thenReturn(realmModel);
+
+        Event impersonateEvent = new Event();
+        impersonateEvent.setType(EventType.IMPERSONATE);
+        impersonateEvent.setRealmId("rhsso.EventListener-v1");
+        impersonateEvent.setUserId("mario.rossi");
+
+        provider.handleClientEvent(impersonateEvent);
+
+        verify(userService,times(1)).updateUser(any(),any(),eq(impersonateEvent.getUserId()));
     }
 
     @Test
@@ -78,22 +94,29 @@ class SsoCustomEventListenerProviderTest {
         loginEvent.setUserId("mario.rossi");
 
         provider.handleClientEvent(loginEvent);
-        verify(userService,times(0)).updateUser(any(),any(),eq("mario.rossi"));
 
-
+        verify(userService,times(0)).updateUser(any(),any(),eq(loginEvent.getUserId()));
     }
 
     @Test
     void testExceptionOnEventHandling() throws NamingException {
+
+        RealmProvider realmProvider =  mock(RealmProvider.class);
+        RealmModel realmModel =  mock(RealmModel.class);
+
+        when(keycloakSession.realms()).thenReturn(realmProvider);
+        when(realmProvider.getRealm(anyString())).thenReturn(realmModel);
+        
         Event loginEvent = new Event();
         loginEvent.setType(EventType.LOGIN);
         loginEvent.setRealmId("rhsso.EventListener-v1");
         loginEvent.setUserId("this_user_does_not_exists");
 
-        provider.handleClientEvent(loginEvent);
+        doThrow(RuntimeException.class).when(userService).updateUser(any(),any(), eq(loginEvent.getUserId()));
 
-        // no call to these, the exception is logged
-        verify(userService, times(0)).queryLDAP(any());
+        provider.handleClientEvent(loginEvent); // here we are testing how we have correctly managed the thrown exceptions not exiting with error
+
+        verify(userService,times(1)).updateUser(any(),any(),eq(loginEvent.getUserId()));
     }
 
 }
