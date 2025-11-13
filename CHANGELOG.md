@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.0] - 13/11/2025
+
+### Added
+
+This version adds the possibility of configuring a list of external ldap server urls used in the LDAP Context creation.
+This new feature increases the resilience of the event listener provider in case of failure of some external ldap servers.
+
+The list of external ldap server urls is configured using the env variable 'EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS' in which every ldap server url is separated by a comma (',').
+Example:
+```shell
+EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS="ldap://localhost:3389,ldap://localhost:4389"
+```
+
+### Changed
+
+'EXTERNAL_LDAP_FEDERATION_PROVIDER_URL' env variable renamed to 'EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS'
+
+Minor bugs fixed.
+
+
 ## [1.0.2] - 28/02/2025
 
 This version addresses the problem of the generation of the access token using user attributes.

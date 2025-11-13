@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper implements OIDCAccessTokenMapper, OIDCIDTokenMapper, UserInfoTokenMapper {
-    private static final Logger LOGGER = Logger.getLogger(CustomOIDCProtocolMapper.class.getName());
 
+    private static final Logger LOGGER = Logger.getLogger(CustomOIDCProtocolMapper.class.getName());
 
     public static final String PROVIDER_ID = "oidc-multipleldapclaimmapper";
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<ProviderConfigProperty>();
