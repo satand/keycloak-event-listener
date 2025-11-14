@@ -1,23 +1,59 @@
 package com.redhat.sso.providers;
 
+import com.redhat.sso.config.ProviderConfig;
 import com.redhat.sso.service.UserService;
+
+import org.jboss.logging.Logger;
 import org.keycloak.Config;
+import org.keycloak.events.Event;
+import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.EventListenerProviderFactory;
+import org.keycloak.events.admin.AdminEvent;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 
-/**
- * @author Luciano Di Leonardo
- * @email ldileona@redhat.com
- * @date 24 Apr 2023
- * @company Red Hat inc.
- * @role Architect
- */
 public class SsoCustomEventListenerProviderFactory implements EventListenerProviderFactory {
 
+    public static final class NoOpSsoCustomEventListenerProvider implements EventListenerProvider {
+
+        @Override
+        public void close() {
+            //Nothing to do
+        }
+
+        @Override
+        public void onEvent(Event event) {
+            //Nothing to do
+        }
+
+        @Override
+        public void onEvent(AdminEvent event, boolean includeRepresentation) {
+            //Nothing to do
+        }
+    }
+
+    private static final Logger LOGGER = Logger.getLogger(SsoCustomEventListenerProviderFactory.class.getName());
+
+    private static final NoOpSsoCustomEventListenerProvider NO_OP_PROVIDER = new NoOpSsoCustomEventListenerProvider();
+
+    private final ProviderConfig config;
+
+    public SsoCustomEventListenerProviderFactory() {
+
+        this.config = new ProviderConfig();
+    }
+
     @Override
-    public SsoCustomEventListenerProvider create(KeycloakSession keycloakSession) {
-        return new SsoCustomEventListenerProvider(keycloakSession, new UserService());
+    public EventListenerProvider create(KeycloakSession keycloakSession) {
+
+        if (config.isEventListenerEnabled()) {
+
+            return new SsoCustomEventListenerProvider(keycloakSession, new UserService());
+        } else {
+
+            LOGGER.warnf("The event listener is disabled. If you want to enable it, change the %s env property value.", ProviderConfig.EXTERNAL_LDAP_FEDERATION_EVENT_LISTENER_ENABLED);
+            return NO_OP_PROVIDER;
+        }
     }
 
     @Override

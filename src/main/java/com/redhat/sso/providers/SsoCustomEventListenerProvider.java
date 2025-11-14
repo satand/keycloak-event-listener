@@ -10,13 +10,6 @@ import org.keycloak.events.admin.AdminEvent;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 
-/**
- * @author Luciano Di Leonardo
- * @email ldileona@redhat.com
- * @date 24 Apr 2023
- * @company Red Hat inc.
- * @role Architect
- */
 public class SsoCustomEventListenerProvider implements EventListenerProvider {
 
     private static final Logger LOGGER = Logger.getLogger(SsoCustomEventListenerProvider.class.getName());
@@ -24,7 +17,7 @@ public class SsoCustomEventListenerProvider implements EventListenerProvider {
     private final KeycloakSession session;
     private final UserService userService;
     private final EventListenerTransaction transaction = new EventListenerTransaction(
-            this::handleAdminEvent,
+            null,
             this::handleClientEvent
     );
 
@@ -61,10 +54,6 @@ public class SsoCustomEventListenerProvider implements EventListenerProvider {
     @Override
     public void onEvent(AdminEvent adminEvent, boolean includeRepresentation) {
         transaction.addAdminEvent(adminEvent, includeRepresentation);
-    }
-
-    private void handleAdminEvent(AdminEvent event, boolean includeRepresentation) {
-        //Not useful
     }
 
     @Override

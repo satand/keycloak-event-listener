@@ -31,8 +31,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -64,8 +64,8 @@ class CustomOIDCProtocolMapperTest {
 
     @BeforeEach
     void init() throws NamingException {
-        mapper = new CustomOIDCProtocolMapper(userService);
-
+        ProviderConfig config = new ProviderConfig();
+        mapper = new CustomOIDCProtocolMapper(userService, config);
     }
 
     @Test
@@ -78,15 +78,11 @@ class CustomOIDCProtocolMapperTest {
         assertThat(mapper.getId(), equalTo("oidc-multipleldapclaimmapper"));
     }
 
+    @SetEnvironmentVariable.SetEnvironmentVariables({
+        @SetEnvironmentVariable(key = "EXTERNAL_LDAP_ATTRIBUTE_MAP", value = "employeeNumber=numero,title=titolo"),
+    })
     @Test
     void testExpectedHelpText() {
-        ProviderConfig config = mock(ProviderConfig.class);
-        when(userService.getConfig()).thenReturn(config);
-        Map<String, String> externalAttributes = new HashMap<>();
-        externalAttributes.put("employeeNumber", "numero");
-        externalAttributes.put("title", "titolo");
-        when(userService.getConfig().getExternalAttributes()).thenReturn(externalAttributes);
-
         assertThat(mapper.getHelpText(), equalTo("This mapper add all the claims defined in EXTERNAL_LDAP_ATTRIBUTE_MAP environment variable: title => titolo,employeeNumber => numero"));
     }
 
@@ -132,9 +128,23 @@ class CustomOIDCProtocolMapperTest {
 
         AccessToken actualToken = mapper.transformAccessToken(accessToken, model, keycloakSession, userSessionModel, clientSessionContext);
         assertThat(actualToken.getOtherClaims().size(), equalTo(0));
-
     }
 
+    @SetEnvironmentVariable.SetEnvironmentVariables({
+        @SetEnvironmentVariable(key = ProviderConfig.EXTERNAL_LDAP_FEDERATION_MAPPER_ENABLED, value = "FALSE")
+    })
+    @Test
+    void testCustomMapperDisabledForAccessToken() {
+        AccessToken accessToken = new AccessToken();
+        ProtocolMapperModel model = new ProtocolMapperModel();
+
+        Map<String, String> config = new HashMap<>();
+        config.put(OIDCAttributeMapperHelper.INCLUDE_IN_ACCESS_TOKEN, "true");
+        model.setConfig(config);
+
+        AccessToken actualToken = mapper.transformAccessToken(accessToken, model, keycloakSession, userSessionModel, clientSessionContext);
+        assertThat(actualToken.getOtherClaims().size(), equalTo(0));
+    }
 
     @Test
     void testCustomClaimsEnabledForIDToken() throws NamingException {
@@ -164,7 +174,22 @@ class CustomOIDCProtocolMapperTest {
 
         IDToken actualToken = mapper.transformIDToken(idToken, model, keycloakSession, userSessionModel, clientSessionContext);
         assertThat(actualToken.getOtherClaims().size(), equalTo(0));
+    }
 
+    @SetEnvironmentVariable.SetEnvironmentVariables({
+        @SetEnvironmentVariable(key = ProviderConfig.EXTERNAL_LDAP_FEDERATION_MAPPER_ENABLED, value = "FALSE")
+    })
+    @Test
+    void testCustomMapperDisabledForIDToken() {
+        IDToken idToken = new IDToken();
+        ProtocolMapperModel model = new ProtocolMapperModel();
+
+        Map<String, String> config = new HashMap<>();
+        config.put(OIDCAttributeMapperHelper.INCLUDE_IN_ID_TOKEN, "true");
+        model.setConfig(config);
+
+        IDToken actualToken = mapper.transformIDToken(idToken, model, keycloakSession, userSessionModel, clientSessionContext);
+        assertThat(actualToken.getOtherClaims().size(), equalTo(0));
     }
 
     @Test
@@ -195,7 +220,22 @@ class CustomOIDCProtocolMapperTest {
 
         AccessToken actualToken = mapper.transformUserInfoToken(accessToken, model, keycloakSession, userSessionModel, clientSessionContext);
         assertThat(actualToken.getOtherClaims().size(), equalTo(0));
+    }
 
+    @SetEnvironmentVariable.SetEnvironmentVariables({
+        @SetEnvironmentVariable(key = ProviderConfig.EXTERNAL_LDAP_FEDERATION_MAPPER_ENABLED, value = "FALSE")
+    })
+    @Test
+    void testCustomMapperDisabledForUserInfo() {
+        AccessToken accessToken = new AccessToken();
+        ProtocolMapperModel model = new ProtocolMapperModel();
+
+        Map<String, String> config = new HashMap<>();
+        config.put(OIDCAttributeMapperHelper.INCLUDE_IN_USERINFO, "true");
+        model.setConfig(config);
+
+        AccessToken actualToken = mapper.transformUserInfoToken(accessToken, model, keycloakSession, userSessionModel, clientSessionContext);
+        assertThat(actualToken.getOtherClaims().size(), equalTo(0));
     }
 
     @Test
@@ -213,33 +253,31 @@ class CustomOIDCProtocolMapperTest {
             mapper.transformIDToken(idToken, model, keycloakSession, userSessionModel, clientSessionContext);
         });
         assertThat(exceptionOnAttribute.getMessage(), equalTo("Error reading attributes"));
-
     }
 
 
     private void prepareContext() throws NamingException {
 
+        RealmModel realmModel = mock(RealmModel.class);
+        UserModel userModel = new InMemoryUserAdapter(keycloakSession, realmModel, "mario.rossi");
+
+        userModel.setFirstName("Mario");
+        userModel.setLastName("Rossi");
+        userModel.setUsername("mario.rossi");
+        userModel.setEmail("mario.rossi@example.com");
+        userModel = spy(userModel);
+
+        when(userSessionModel.getUser()).thenReturn(userModel);
+
         Map<String, String> attributes = new HashMap<>();
         attributes.put("titolo", "NormalUser");
         attributes.put("numero", "42");
 
-        RealmModel realmModel = mock(RealmModel.class);
-        UserModel userModel = new InMemoryUserAdapter(keycloakSession, realmModel, "mario.rossi");
-
-        userModel.setFirstName("Mario");
-        userModel.setLastName("Rossi");
-        userModel.setUsername("mario.rossi");
-        userModel.setEmail("mario.rossi@example.com");
-        userModel = spy(userModel);
-
         when(userService.queryLDAP(eq("mario.rossi"))).thenReturn(attributes);
-
-        when(userSessionModel.getUser()).thenReturn(userModel);
     }
 
     private void prepareWrongContext() throws NamingException {
 
-
         RealmModel realmModel = mock(RealmModel.class);
         UserModel userModel = new InMemoryUserAdapter(keycloakSession, realmModel, "mario.rossi");
 
@@ -249,9 +287,9 @@ class CustomOIDCProtocolMapperTest {
         userModel.setEmail("mario.rossi@example.com");
         userModel = spy(userModel);
 
-        when(userService.queryLDAP(any())).thenThrow(new NamingException("Exception on attribute"));
-
         when(userSessionModel.getUser()).thenReturn(userModel);
+
+        when(userService.queryLDAP(any())).thenThrow(new NamingException("Exception on attribute"));
     }
 
 

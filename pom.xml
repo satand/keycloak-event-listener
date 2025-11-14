@@ -27,6 +27,15 @@
             <organizationUrl>https://www.redhat.com</organizationUrl>
             <email>lsnidero@redhat.com</email>
         </developer>
+        <developer>
+            <name>Andrea Satriani</name>
+            <organization>Red Hat Inc.</organization>
+            <roles>
+                <role>Architect</role>
+            </roles>
+            <organizationUrl>https://www.redhat.com</organizationUrl>
+            <email>asatrian@redhat.com</email>
+        </developer>
     </developers>
     <properties>
         <!-- Maven -->

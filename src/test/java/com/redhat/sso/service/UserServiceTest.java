@@ -62,11 +62,6 @@ class UserServiceTest {
     }
 
     @Test
-    void testSameConfig(){
-        assertThat(userService.getConfig(),equalTo(providerConfig));
-    }
-
-    @Test
     void testQueryOK() throws NamingException {
 
         // Given

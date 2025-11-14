@@ -29,10 +29,6 @@ public class UserService {
         this.config = new ProviderConfig();
     }
 
-    public ProviderConfig getConfig() {
-        return config;
-    }
-
     public Map<String, String> queryLDAP(String username) throws NamingException {
 
         LOGGER.infof("Searching a user with username %s on external LDAP server", username);

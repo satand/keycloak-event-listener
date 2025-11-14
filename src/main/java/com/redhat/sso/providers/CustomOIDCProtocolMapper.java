@@ -1,5 +1,6 @@
 package com.redhat.sso.providers;
 
+import com.redhat.sso.config.ProviderConfig;
 import com.redhat.sso.service.UserService;
 import org.jboss.logging.Logger;
 import org.keycloak.models.ClientSessionContext;
@@ -12,7 +13,6 @@ import org.keycloak.protocol.oidc.mappers.OIDCAttributeMapperHelper;
 import org.keycloak.protocol.oidc.mappers.OIDCIDTokenMapper;
 import org.keycloak.protocol.oidc.mappers.UserInfoTokenMapper;
 import org.keycloak.provider.ProviderConfigProperty;
-import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.IDToken;
 import org.keycloak.representations.JsonWebToken;
 
@@ -26,34 +26,43 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper impleme
     private static final Logger LOGGER = Logger.getLogger(CustomOIDCProtocolMapper.class.getName());
 
     public static final String PROVIDER_ID = "oidc-multipleldapclaimmapper";
+    
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<ProviderConfigProperty>();
 
     private final UserService userService;
+    private final ProviderConfig config;
 
     static {
         OIDCAttributeMapperHelper.addIncludeInTokensConfig(configProperties, CustomOIDCProtocolMapper.class);
     }
 
     public CustomOIDCProtocolMapper() {
+
         this.userService = new UserService();
+        this.config = new ProviderConfig();
     }
 
-    protected CustomOIDCProtocolMapper(UserService userService) {
+    protected CustomOIDCProtocolMapper(UserService userService, ProviderConfig config) {
+
         this.userService = userService;
+        this.config = config;
     }
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
+
         return configProperties;
     }
 
     @Override
     public String getDisplayCategory() {
+
         return TOKEN_MAPPER_CATEGORY;
     }
 
     @Override
     public String getDisplayType() {
+
         return "Multiple LDAP Claim Mapper";
     }
 
@@ -66,7 +75,7 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper impleme
     public String getHelpText() {
 
         StringBuilder sb = new StringBuilder();
-        userService.getConfig().getExternalAttributes().forEach((k, v) -> {
+        config.getExternalAttributes().forEach((k, v) -> {
             sb.append(sb.length() == 0 ? "" : ",").append(k).append(" => ").append(v);
         });
 
@@ -74,53 +83,26 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper impleme
     }
 
     @Override
-    public AccessToken transformAccessToken(AccessToken token, ProtocolMapperModel mappingModel, KeycloakSession keycloakSession,
-                                            UserSessionModel userSession, ClientSessionContext clientSessionCtx) {
-        boolean updateNeeded = OIDCAttributeMapperHelper.includeInAccessToken(mappingModel);
-        LOGGER.debugf("Are custom claims included in access token? %s", updateNeeded);
-        if (updateNeeded) {
-            return updateToken(token, mappingModel, keycloakSession, userSession, clientSessionCtx);
+    protected void setClaim(IDToken token, ProtocolMapperModel mappingModel, UserSessionModel userSession, KeycloakSession keycloakSession, ClientSessionContext clientSessionCtx) {
+
+        if (!config.isMapperEnabled()) {
+
+            LOGGER.warnf("The mapper is disabled. If you want to enable it, change the %s env property value.", ProviderConfig.EXTERNAL_LDAP_FEDERATION_MAPPER_ENABLED);
+            return;
         }
-        return super.transformAccessToken(token, mappingModel, keycloakSession, userSession, clientSessionCtx);
 
+        enrichToken(token, userSession.getUser().getUsername());
     }
 
-    @Override
-    public IDToken transformIDToken(IDToken token, ProtocolMapperModel mappingModel, KeycloakSession keycloakSession, UserSessionModel userSession, ClientSessionContext clientSessionCtx) {
-        boolean updateNeeded = OIDCAttributeMapperHelper.includeInIDToken(mappingModel);
-        LOGGER.debugf("Are custom claims included in IDtoken? %s", updateNeeded);
-        if (updateNeeded) {
-            return updateToken(token, mappingModel, keycloakSession, userSession, clientSessionCtx);
-        }
-        return super.transformIDToken(token, mappingModel, keycloakSession, userSession, clientSessionCtx);
-
-    }
-
-    @Override
-    public AccessToken transformUserInfoToken(AccessToken token, ProtocolMapperModel mappingModel, KeycloakSession keycloakSession, UserSessionModel userSession, ClientSessionContext clientSessionCtx) {
-        boolean updateNeeded = OIDCAttributeMapperHelper.includeInUserInfo(mappingModel);
-        LOGGER.debugf("Are custom claims included in Userinfo? %s", updateNeeded);
-        if (updateNeeded) {
-            return updateToken(token, mappingModel, keycloakSession, userSession, clientSessionCtx);
-        }
-        return super.transformUserInfoToken(token, mappingModel, keycloakSession, userSession, clientSessionCtx);
-
-    }
-
-    private <T extends IDToken> T updateToken(T token, ProtocolMapperModel mappingModel, KeycloakSession keycloakSession, UserSessionModel userSession, ClientSessionContext clientSessionCtx) {
-        compileToken(token, userSession.getUser().getUsername());
-        setClaim(token, mappingModel, userSession, keycloakSession, clientSessionCtx);
-        return token;
-    }
-
-    private void compileToken(JsonWebToken token, String username) {
+    private void enrichToken(JsonWebToken token, String username) {
         try {
             Map<String, String> customAttributes = userService.queryLDAP(username);
-            customAttributes.forEach((key, value) -> token.getOtherClaims().put(key, value));
+            Map<String, Object> otherClaims = token.getOtherClaims();
+            customAttributes.forEach(otherClaims::put);
         } catch (NamingException e) {
+
             throw new IllegalArgumentException("Error reading attributes", e);
         }
-
     }
 
 }
