@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.0] - 14/11/2025
+
+### Added
+
+This version adds the possibility of enable/disable the custom event listener provider and mapper independently.
+
+To enable/disable the custom event listener provider, use the 'EXTERNAL_LDAP_FEDERATION_EVENT_LISTENER_ENABLED' env property (its default value is true).
+
+To enable/disable the custom mapper, use the 'EXTERNAL_LDAP_FEDERATION_MAPPER_ENABLED' env property (its default value is true).
+
+Example:
+```shell
+EXTERNAL_LDAP_FEDERATION_EVENT_LISTENER_ENABLED="FALSE"
+EXTERNAL_LDAP_FEDERATION_MAPPER_ENABLED="TRUE"
+```
+
+
 ## [1.1.0] - 13/11/2025
 
 ### Added
