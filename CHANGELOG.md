@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.1] - 17/11/2025
+
+### Changed
+
+This version changes the creation and deletion of the LDAP context in the custom SSO plugin.
+
+Until now the mapper and the event listener provider had created an single-use LDAP context for each LDAP search.
+Now the plugin creates and uses an only one LDAP context with connection pool enabled for both mapper and event listener provider.
+The SSO plugin close the LDAP context at shutdown.
+
+
 ## [1.2.0] - 14/11/2025
 
 ### Added
