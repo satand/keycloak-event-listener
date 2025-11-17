@@ -14,16 +14,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.naming.NamingException;
-import javax.naming.directory.DirContext;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -47,18 +46,17 @@ class UserServiceTest {
     }
 
     private void initLdapMocks() throws NamingException {
-        DirContext ctx = mock(DirContext.class);
+        // DirContext ctx = mock(DirContext.class);
         Map<String, String> attributeMapping = new HashMap<>();
         attributeMapping.put("titolo", "Developer");
         attributeMapping.put("numero", "42");
 
-        when(ldapService.initContext(any(), any(), any())).thenReturn(ctx);
         doAnswer(invocationOnMock -> {
-            if (invocationOnMock.getArgument(3, String.class).equals("mario.rossi")) {
+            if (invocationOnMock.getArgument(2, String.class).equals("mario.rossi")) {
                 return attributeMapping;
             }
             throw new IllegalArgumentException("user user_not_exists not found");
-        }).when(ldapService).searchUserOnExternalLDAP(eq(ctx), any(), any(), any(), any());
+        }).when(ldapService).searchUserOnExternalLDAP(any(), any(), any(), any());
     }
 
     @Test
@@ -72,7 +70,6 @@ class UserServiceTest {
         assertThat(actualResult.size(), equalTo(2));
         assertThat(actualResult.get("titolo"), equalTo("Developer"));
         assertThat(actualResult.get("numero"), equalTo("42"));
-
     }
 
     @Test
@@ -86,6 +83,17 @@ class UserServiceTest {
         });
 
         assertThat(userNotFound.getMessage(), equalTo("user user_not_exists not found"));
+    }
+
+    @Test
+    void testQueryWhenUserServiceIsClosed() throws NamingException {
+
+        userService.close();
+
+        Map<String, String> actualResult = userService.queryLDAP("mario.rossi");
+
+        assertThat(actualResult.size(), equalTo(0));
+        verify(ldapService, times(1)).close();
     }
 
     @Test
@@ -204,9 +212,40 @@ class UserServiceTest {
         });
 
         assertThat(userNotFound.getMessage(), equalTo("User with id non.existent not found"));
-
-
     }
 
+    @Test
+    void testUpdatedUserWhenUserServiceIsClosed() throws NamingException {
+
+        userService.close();
+
+        RealmModel realmModel = mock(RealmModel.class);
+        KeycloakSession keycloakSession = mock(KeycloakSession.class);
+
+        UserCache userCache = mock(UserCache.class);
+        UserProvider userProvider = mock(UserProvider.class);
+        // Session
+        when(keycloakSession.userLocalStorage()).thenReturn(userProvider);
+        when(keycloakSession.userCache()).thenReturn(userCache);
+
+        UserModel userModel = new InMemoryUserAdapter(keycloakSession, realmModel, "mario.rossi");
+
+        userModel.setFirstName("Mario");
+        userModel.setLastName("Rossi");
+        userModel.setUsername("mario.rossi");
+        userModel.setEmail("mario.rossi@example.com");
+        userModel = spy(userModel);
+
+        // User found on cache and on provider
+        when(userCache.getUserById(eq(realmModel), eq("mario.rossi"))).thenReturn(userModel);
+        when(userProvider.getUserById(eq(realmModel), eq("mario.rossi"))).thenReturn(userModel);
+
+        userService.updateUser(realmModel, keycloakSession, "mario.rossi");
+
+        verify(ldapService, times(1)).close();
+        verify(userModel, times(0)).setSingleAttribute(eq("titolo"), any());
+        verify(userModel, times(0)).setSingleAttribute(eq("numero"), any());
+        verify(userCache, times(1)).getUserById(eq(realmModel), eq("mario.rossi"));
+    }
 
 }

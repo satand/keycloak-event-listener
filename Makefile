@@ -10,7 +10,9 @@ prepare-sso: compile
 	cp target/sso-event-listener-provider.jar ${SSO_PATH}/standalone/deployments
 
 run-sso: prepare-sso compile
-	export EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS="ldap://localhost:2389,ldap://localhost:3389" && \
+	export EXTERNAL_LDAP_FEDERATION_EVENT_LISTENER_ENABLED="FALSE" && \
+    export EXTERNAL_LDAP_FEDERATION_MAPPER_ENABLED="TRUE" && \
+    export EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS="ldap://localhost:2389,ldap://localhost:3389" && \
     export EXTERNAL_LDAP_SECURITY_PRINCIPAL=cn=admin,dc=ldap,dc=external,dc=example,dc=com && \
     export EXTERNAL_LDAP_SECURITY_CREDENTIALS=password && \
     export EXTERNAL_LDAP_USERS_DN=ou=users,dc=ldap,dc=external,dc=example,dc=com && \

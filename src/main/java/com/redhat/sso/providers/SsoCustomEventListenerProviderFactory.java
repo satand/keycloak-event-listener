@@ -37,10 +37,17 @@ public class SsoCustomEventListenerProviderFactory implements EventListenerProvi
     private static final NoOpSsoCustomEventListenerProvider NO_OP_PROVIDER = new NoOpSsoCustomEventListenerProvider();
 
     private final ProviderConfig config;
+    private final UserService userService;
+
+    public SsoCustomEventListenerProviderFactory(UserService userService) {
+
+        this.config = new ProviderConfig();
+        this.userService = userService;
+    }
 
     public SsoCustomEventListenerProviderFactory() {
 
-        this.config = new ProviderConfig();
+        this(new UserService());
     }
 
     @Override
@@ -48,7 +55,7 @@ public class SsoCustomEventListenerProviderFactory implements EventListenerProvi
 
         if (config.isEventListenerEnabled()) {
 
-            return new SsoCustomEventListenerProvider(keycloakSession, new UserService());
+            return new SsoCustomEventListenerProvider(keycloakSession, userService);
         } else {
 
             LOGGER.warnf("The event listener is disabled. If you want to enable it, change the %s env property value.", ProviderConfig.EXTERNAL_LDAP_FEDERATION_EVENT_LISTENER_ENABLED);
@@ -68,7 +75,9 @@ public class SsoCustomEventListenerProviderFactory implements EventListenerProvi
 
     @Override
     public void close() {
-        //Not useful
+        
+        userService.close();
+        LOGGER.infof("%s is closed.", getId());
     }
 
     @Override

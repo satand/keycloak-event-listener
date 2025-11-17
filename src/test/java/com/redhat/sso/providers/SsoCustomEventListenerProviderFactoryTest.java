@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.redhat.sso.config.ProviderConfig;
+import com.redhat.sso.service.UserService;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -31,6 +32,8 @@ class SsoCustomEventListenerProviderFactoryTest {
     @Mock
     KeycloakSession session;
 
+    @Mock
+    UserService userService;
 
     @ClearEnvironmentVariable.ClearEnvironmentVariables({
         @ClearEnvironmentVariable(key = "EXTERNAL_LDAP_FEDERATION_PROVIDER_URLS")
@@ -39,7 +42,7 @@ class SsoCustomEventListenerProviderFactoryTest {
     void testExeptionOnMissingEnvForCreateEventListenerProviderFactory() {
         IllegalArgumentException noEnvVar = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             
-            new SsoCustomEventListenerProviderFactory();
+            new SsoCustomEventListenerProviderFactory(userService);
         });
 
         assertThat(noEnvVar.getMessage(), allOf(containsString("The environment variable"), containsString("is mandatory but is not present")));
@@ -49,8 +52,8 @@ class SsoCustomEventListenerProviderFactoryTest {
         @SetEnvironmentVariable(key = ProviderConfig.EXTERNAL_LDAP_FEDERATION_EVENT_LISTENER_ENABLED, value = "FALSE"),
     })
     @Test
-    void testCreateEventListenerProviderWhenEnabled() {
-        SsoCustomEventListenerProviderFactory factory = new SsoCustomEventListenerProviderFactory();
+    void testCreateEventListenerProviderWhenDisabled() {
+        SsoCustomEventListenerProviderFactory factory = new SsoCustomEventListenerProviderFactory(userService);
 
         EventListenerProvider eventListenerProvider = factory.create(session);
 
@@ -58,9 +61,28 @@ class SsoCustomEventListenerProviderFactoryTest {
         assertThat(eventListenerProvider, instanceOf(SsoCustomEventListenerProviderFactory.NoOpSsoCustomEventListenerProvider.class));
     }
 
+
+    @SetEnvironmentVariable.SetEnvironmentVariables({
+        @SetEnvironmentVariable(key = ProviderConfig.EXTERNAL_LDAP_FEDERATION_EVENT_LISTENER_ENABLED, value = "TRUE"),
+    })
     @Test
-    void testCreateEventListenerProviderWhenDisabled() {
-        SsoCustomEventListenerProviderFactory factory = new SsoCustomEventListenerProviderFactory();
+    void testCreateEventListenerProviderWhenEnabled() {
+        SsoCustomEventListenerProviderFactory factory = new SsoCustomEventListenerProviderFactory(userService);
+
+
+        KeycloakTransactionManager keycloakTransactionManager = mock(KeycloakTransactionManager.class);
+        when(session.getTransactionManager()).thenReturn(keycloakTransactionManager);
+
+        EventListenerProvider eventListenerProvider = factory.create(session);
+
+        assertThat(eventListenerProvider, notNullValue());
+        assertThat(eventListenerProvider, instanceOf(SsoCustomEventListenerProvider.class));
+    }
+
+    @Test
+    void testCreateEventListenerProviderWhenEnabledByDefault() {
+        SsoCustomEventListenerProviderFactory factory = new SsoCustomEventListenerProviderFactory(userService);
+
 
         KeycloakTransactionManager keycloakTransactionManager = mock(KeycloakTransactionManager.class);
         when(session.getTransactionManager()).thenReturn(keycloakTransactionManager);
@@ -73,7 +95,7 @@ class SsoCustomEventListenerProviderFactoryTest {
 
     @Test
     void testExpectedEventListenerProviderFactoryId() {
-        SsoCustomEventListenerProviderFactory factory = new SsoCustomEventListenerProviderFactory();
+        SsoCustomEventListenerProviderFactory factory = new SsoCustomEventListenerProviderFactory(userService);
 
         assertThat(factory.getId(), equalTo("multiple-ldap-EventListener"));
     }

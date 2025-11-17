@@ -8,7 +8,6 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 
 import javax.naming.NamingException;
-import javax.naming.directory.DirContext;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +15,7 @@ import java.util.Optional;
 public class UserService {
     private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
 
+    private boolean closed = false;
     private final LdapService ldapService;
     private final ProviderConfig config;
 
@@ -25,28 +25,30 @@ public class UserService {
     }
 
     public UserService() {
-        this.ldapService = new LdapService();
         this.config = new ProviderConfig();
+        this.ldapService = LdapService.getLdapService(config.getProviderUrls(), config.getSecurityPrincipal(), config.getSecurityCredentials());
+    }
+
+    public void close() {
+
+        LdapService.close(ldapService);
+        closed = true;
     }
 
     public Map<String, String> queryLDAP(String username) throws NamingException {
 
+        if (closed) {
+            LOGGER.warn("Impossible query LDAP: user service is closed");
+            return Collections.emptyMap();
+        }
+
         LOGGER.infof("Searching a user with username %s on external LDAP server", username);
 
-        DirContext context = ldapService.initContext(config.getProviderUrls(), config.getSecurityPrincipal(), config.getSecurityCredentials());
-        LOGGER.debug("External LDAP context initialized ");
+        Map<String, String> collect = ldapService.searchUserOnExternalLDAP( 
+            config.getUsersDN(), config.getExternalUsernameFilter(), username, config.getExternalAttributes());
+        LOGGER.infof("Collected %d attributes for user %s: %s", collect.size(), username, collect);
 
-        try {
-
-            Map<String, String> collect = ldapService.searchUserOnExternalLDAP(context, 
-                config.getUsersDN(), config.getExternalUsernameFilter(), username, config.getExternalAttributes());
-            LOGGER.infof("Collected %d attributes for user %s: %s", collect.size(), username, collect);
-    
-            return Collections.unmodifiableMap(collect);
-        }
-        finally {
-            context.close();
-        }
+        return Collections.unmodifiableMap(collect);
     }
 
     public void updateUser(RealmModel realm, KeycloakSession session, String userId) throws NamingException {

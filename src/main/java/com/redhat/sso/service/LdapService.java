@@ -2,6 +2,8 @@ package com.redhat.sso.service;
 
 import org.jboss.logging.Logger;
 
+import com.redhat.sso.utils.HashUtils;
+
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -17,12 +19,36 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class LdapService {
 
+    public static class LdapCtxCreationException extends RuntimeException {
+    
+        public LdapCtxCreationException(Exception cause) {
+
+            super("Error creating the LDAP context: " + cause.getMessage(), cause);
+        }
+    }
+
     private static final Logger LOGGER = Logger.getLogger(LdapService.class.getName());
 
-    public DirContext initContext(List<String> providerUrls, String securityPrincipal, String securityCredentials) throws NamingException {
+    private static Map<String,LdapService> INSTANCE_MAP = new HashMap<>();
+
+    private final DirContext ctx;
+
+    LdapService(List<String> providerUrls, String securityPrincipal, String securityCredentials) {
+
+        try {
+            ctx = initContext(providerUrls, securityPrincipal, securityCredentials);
+            LOGGER.info("LDAP Context initialized");
+        } catch (NamingException e) {
+            throw new LdapCtxCreationException(e);
+        }
+    }
+
+    DirContext initContext(List<String> providerUrls, String securityPrincipal, String securityCredentials) throws NamingException {
+
         Hashtable<String, String> env = new Hashtable<>();
 
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -30,16 +56,51 @@ public class LdapService {
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL, securityPrincipal);
         env.put(Context.SECURITY_CREDENTIALS, securityCredentials);
-        // env.put("com.sun.jndi.ldap.connect.pool", "true");
-        env.put("com.sun.jndi.ldap.connect.timeout", "5000"); // 5 sec
+        env.put("com.sun.jndi.ldap.connect.pool", "true");
+        env.put("com.sun.jndi.ldap.connect.pool.maxsize", "50");
+        env.put("com.sun.jndi.ldap.connect.pool.prefsize", "5");
+        env.put("com.sun.jndi.ldap.connect.pool.timeout", "300000"); // 5 mins
+        env.put("com.sun.jndi.ldap.connect.timeout", "5000"); // 5 secs
 
         return new InitialDirContext(env);
+    }
+
+    public static synchronized LdapService getLdapService(List<String> providerUrls, String securityPrincipal, String securityCredentials) {
+
+        String sha256 = HashUtils.toSha256(providerUrls.stream().collect(Collectors.joining()) + securityPrincipal + securityCredentials);
+        
+        LdapService service = INSTANCE_MAP.get(sha256);
+        if (service == null) {
+            
+            service = new LdapService(providerUrls, securityPrincipal, securityCredentials);
+            INSTANCE_MAP.put(sha256, service);
+        }
+
+        return service;
+    }
+
+    public static void close(LdapService service) {
+        if (service == null) {
+            return;
+        }
+
+        service.close();
+
+        INSTANCE_MAP.entrySet().removeIf(entry -> entry.getValue() == service);
+    }
+
+    public void close() {
+
+        try {
+            ctx.close();
+        } catch (NamingException e) {
+            LOGGER.warn("Error closing the LDAP context: " + e.getMessage(), e);
+        }
     }
 
     /**
      * Search User directly with baseDN and (uniqueAttribute=userName) as filter
      *
-     * @param ctx              LDAP context
      * @param baseDN           baseDN for the search
      * @param uniqueAttribute  attribute used on LDAP to filter user (usually cn or samaccountname)
      * @param userName         SSO username
@@ -47,7 +108,7 @@ public class LdapService {
      * @return Map of key, value attributes found
      * @throws NamingException when the search went wrong
      */
-    public Map<String, String> searchUserOnExternalLDAP(DirContext ctx, String baseDN, String uniqueAttribute, String userName, Map<String, String> attributeMapping) throws NamingException {
+    public Map<String, String> searchUserOnExternalLDAP(String baseDN, String uniqueAttribute, String userName, Map<String, String> attributeMapping) throws NamingException {
         String filter = String.format("(%s=%s)", uniqueAttribute, userName);
 
         SearchControls searchControls = new SearchControls();
@@ -58,7 +119,7 @@ public class LdapService {
         if (list.size() != 1) {
             throw new IllegalArgumentException(String.format("Found %s record(s) using baseDN %s and filter %s. Expected 1", list.size(), baseDN, filter));
         }
-        SearchResult userFound = list.stream().findFirst().orElseThrow(IllegalArgumentException::new);
+        SearchResult userFound = list.stream().findFirst().get();
 
         final Attributes userAttributes = userFound.getAttributes();
 
