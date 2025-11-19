@@ -19,4 +19,10 @@ run-sso: prepare-sso compile
     export EXTERNAL_LDAP_ATTRIBUTE_MAP=title=titolo,non_existent_attribute=non_existent_attribute,employeenumber=numero,uidnumber=userID,roomNumber=stanza,sn=sn && \
     export EXTERNAL_LDAP_USERNAME_FILTER=cn && \
 	${SSO_PATH}/bin/standalone.sh -b 0.0.0.0
+
+    ## Debug LDAP Connection Pool
+    # -Dcom.sun.jndi.ldap.connect.pool.debug=all 
+    ## Set specific LDAP Connection Pool maxsize (the default value is 1000) and timeout (the default value is 300000)
+    # -Dcom.sun.jndi.ldap.connect.pool.maxsize=100 -Dcom.sun.jndi.ldap.connect.pool.timeout=60000
+    ## Set JBOSS binding port offset 
     # -Djboss.socket.binding.port-offset=1000
