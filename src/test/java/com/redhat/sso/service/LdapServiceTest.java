@@ -7,7 +7,6 @@ import org.apache.directory.server.core.annotations.CreateDS;
 import org.apache.directory.server.core.annotations.CreatePartition;
 import org.apache.directory.server.core.integ.AbstractLdapTestUnit;
 import org.apache.directory.server.core.integ.ApacheDSTestExtension;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,50 +27,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @ApplyLdifFiles({"users.ldif"})
 class LdapServiceTest extends AbstractLdapTestUnit {
 
-    private LdapService service;
-
-    @AfterEach
-    void clean() {
-
-        LdapService.close(service);
-    }
-
-    @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", address = "localhost", port = 11390),
-                                    @CreateTransport(protocol = "LDAP", address = "localhost", port = 21390)})
-    @Test
-    void testLdapContextWhenAllTheServersAreAvailable() {
-        service = LdapService.getLdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"), 
-            "uid=admin,ou=system", "secret");
-    }
-
-    @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", address = "localhost", port = 11390)})
-    @Test
-    void testLdapContextWhenOnlyTheFirstServerIsAvailable() {
-        service = LdapService.getLdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"), 
-            "uid=admin,ou=system", "secret");
-    }
-
-    @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", address = "localhost", port = 21390)})
-    @Test
-    void testLdapContextWhenOnlyTheSecondServerIsAvailable() {
-        service = LdapService.getLdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"), 
-            "uid=admin,ou=system", "secret");
-    }
-
-    @Test
-    void testLdapContextWhenNoServerIsAvailable() {
-
-        Assertions.assertThrows(LdapCtxCreationException.class, () -> {
-            service = LdapService.getLdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"), 
-            "uid=admin,ou=system", "secret");
-        });
-    }
+    private LdapService service = new LdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"),
+        "uid=admin,ou=system", "secret");
 
     @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", address = "localhost", port = 11390)})
     @Test
     void testUserFoundWithUidFromRootDC() throws NamingException {
-        service = LdapService.getLdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"), 
-            "uid=admin,ou=system", "secret");
 
         Map<String, String> attributeMapping = new HashMap<>();
         attributeMapping.put("title", "titolo");
@@ -90,8 +51,6 @@ class LdapServiceTest extends AbstractLdapTestUnit {
     @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", address = "localhost", port = 11390)})
     @Test
     void testUserFoundWithCommonName() throws NamingException {
-        service = LdapService.getLdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"), 
-            "uid=admin,ou=system", "secret");
 
         Map<String, String> attributeMapping = new HashMap<>();
         attributeMapping.put("title", "titolo");
@@ -110,8 +69,6 @@ class LdapServiceTest extends AbstractLdapTestUnit {
     @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", address = "localhost", port = 11390)})
     @Test
     void testExceptionUserNotFound() throws NamingException {
-        service = LdapService.getLdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"), 
-            "uid=admin,ou=system", "secret");
 
         Map<String, String> attributeMapping = new HashMap<>();
         attributeMapping.put("title", "titolo");
@@ -128,8 +85,6 @@ class LdapServiceTest extends AbstractLdapTestUnit {
     @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", address = "localhost", port = 11390)})
     @Test
     void testExceptionMultipleUsersFound() throws NamingException {
-        service = LdapService.getLdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"), 
-            "uid=admin,ou=system", "secret");
 
         Map<String, String> attributeMapping = new HashMap<>();
         attributeMapping.put("title", "titolo");
@@ -146,8 +101,6 @@ class LdapServiceTest extends AbstractLdapTestUnit {
     @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", address = "localhost", port = 11390)})
     @Test
     void testNoExceptionOnAttributeNotFound() throws NamingException {
-        service = LdapService.getLdapService(Arrays.asList("ldap://localhost:11390", "ldap://localhost:21390"), 
-            "uid=admin,ou=system", "secret");
 
         Map<String, String> attributeMapping = new HashMap<>();
         attributeMapping.put("title", "titolo");
@@ -164,6 +117,37 @@ class LdapServiceTest extends AbstractLdapTestUnit {
         assertThat(userAttributes.get("employeenumber"), nullValue());
         assertThat(userAttributes.get("attributo_non_presente"), nullValue());
         assertThat(userAttributes.get("non_existent_attribute"), nullValue());
+    }
+
+    @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", address = "localhost", port = 21390)})
+    @Test
+    void testSearchWhenOnlyTheSecondLdapServerIsAvailable() throws NamingException {
+
+        Map<String, String> attributeMapping = new HashMap<>();
+        attributeMapping.put("title", "titolo");
+        attributeMapping.put("employeenumber", "numero");
+
+        Map<String, String> userAttributes = service.searchUserOnExternalLDAP(
+            "dc=myorg,dc=com", "uid", "ldaptest1", attributeMapping);
+        
+        assertThat(userAttributes.size(), equalTo(2));
+        assertThat(userAttributes.get("titolo"), equalTo("Worker"));
+        assertThat(userAttributes.get("numero"), equalTo("42"));
+        assertThat(userAttributes.get("title"), nullValue());
+        assertThat(userAttributes.get("employeenumber"), nullValue());
+    }
+
+    @Test
+    void testLdapContextWhenNoServerIsAvailable() {
+
+        Map<String, String> attributeMapping = new HashMap<>();
+        attributeMapping.put("title", "titolo");
+        attributeMapping.put("employeenumber", "numero");
+
+        Assertions.assertThrows(LdapCtxCreationException.class, () -> {
+            service.searchUserOnExternalLDAP(
+                "dc=myorg,dc=com", "uid", "ldaptest1", attributeMapping);
+        });
     }
 
 }

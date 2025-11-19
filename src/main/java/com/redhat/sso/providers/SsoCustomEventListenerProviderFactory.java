@@ -75,9 +75,7 @@ public class SsoCustomEventListenerProviderFactory implements EventListenerProvi
 
     @Override
     public void close() {
-        
-        userService.close();
-        LOGGER.infof("%s is closed.", getId());
+        //Not useful
     }
 
     @Override

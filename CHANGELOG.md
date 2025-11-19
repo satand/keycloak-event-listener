@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.2] - 19/11/2025
+
+### Changed
+
+This version use the JNDI pool in the LDAP context of the custom SSO plugin.
+In addition, the custom SSO plugin tries to recreate the LDAP connection in case of detection of a stale LDAP connection.
+
+
 ## [1.2.1] - 17/11/2025
 
 ### Changed

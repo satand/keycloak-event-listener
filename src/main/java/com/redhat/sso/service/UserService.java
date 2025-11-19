@@ -15,7 +15,6 @@ import java.util.Optional;
 public class UserService {
     private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
 
-    private boolean closed = false;
     private final LdapService ldapService;
     private final ProviderConfig config;
 
@@ -26,21 +25,10 @@ public class UserService {
 
     public UserService() {
         this.config = new ProviderConfig();
-        this.ldapService = LdapService.getLdapService(config.getProviderUrls(), config.getSecurityPrincipal(), config.getSecurityCredentials());
-    }
-
-    public void close() {
-
-        LdapService.close(ldapService);
-        closed = true;
+        this.ldapService = new LdapService(config.getProviderUrls(), config.getSecurityPrincipal(), config.getSecurityCredentials());
     }
 
     public Map<String, String> queryLDAP(String username) throws NamingException {
-
-        if (closed) {
-            LOGGER.warn("Impossible query LDAP: user service is closed");
-            return Collections.emptyMap();
-        }
 
         LOGGER.infof("Searching a user with username %s on external LDAP server", username);
 

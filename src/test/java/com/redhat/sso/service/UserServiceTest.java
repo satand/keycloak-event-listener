@@ -46,7 +46,7 @@ class UserServiceTest {
     }
 
     private void initLdapMocks() throws NamingException {
-        // DirContext ctx = mock(DirContext.class);
+
         Map<String, String> attributeMapping = new HashMap<>();
         attributeMapping.put("titolo", "Developer");
         attributeMapping.put("numero", "42");
@@ -83,17 +83,6 @@ class UserServiceTest {
         });
 
         assertThat(userNotFound.getMessage(), equalTo("user user_not_exists not found"));
-    }
-
-    @Test
-    void testQueryWhenUserServiceIsClosed() throws NamingException {
-
-        userService.close();
-
-        Map<String, String> actualResult = userService.queryLDAP("mario.rossi");
-
-        assertThat(actualResult.size(), equalTo(0));
-        verify(ldapService, times(1)).close();
     }
 
     @Test
@@ -212,40 +201,6 @@ class UserServiceTest {
         });
 
         assertThat(userNotFound.getMessage(), equalTo("User with id non.existent not found"));
-    }
-
-    @Test
-    void testUpdatedUserWhenUserServiceIsClosed() throws NamingException {
-
-        userService.close();
-
-        RealmModel realmModel = mock(RealmModel.class);
-        KeycloakSession keycloakSession = mock(KeycloakSession.class);
-
-        UserCache userCache = mock(UserCache.class);
-        UserProvider userProvider = mock(UserProvider.class);
-        // Session
-        when(keycloakSession.userLocalStorage()).thenReturn(userProvider);
-        when(keycloakSession.userCache()).thenReturn(userCache);
-
-        UserModel userModel = new InMemoryUserAdapter(keycloakSession, realmModel, "mario.rossi");
-
-        userModel.setFirstName("Mario");
-        userModel.setLastName("Rossi");
-        userModel.setUsername("mario.rossi");
-        userModel.setEmail("mario.rossi@example.com");
-        userModel = spy(userModel);
-
-        // User found on cache and on provider
-        when(userCache.getUserById(eq(realmModel), eq("mario.rossi"))).thenReturn(userModel);
-        when(userProvider.getUserById(eq(realmModel), eq("mario.rossi"))).thenReturn(userModel);
-
-        userService.updateUser(realmModel, keycloakSession, "mario.rossi");
-
-        verify(ldapService, times(1)).close();
-        verify(userModel, times(0)).setSingleAttribute(eq("titolo"), any());
-        verify(userModel, times(0)).setSingleAttribute(eq("numero"), any());
-        verify(userCache, times(1)).getUserById(eq(realmModel), eq("mario.rossi"));
     }
 
 }

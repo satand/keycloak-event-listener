@@ -49,12 +49,6 @@ public class CustomOIDCProtocolMapper extends AbstractOIDCProtocolMapper impleme
     }
 
     @Override
-    public void close() {
-        userService.close();
-        LOGGER.infof("%s is closed.", getDisplayType());
-    }
-
-    @Override
     public List<ProviderConfigProperty> getConfigProperties() {
 
         return configProperties;
